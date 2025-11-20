@@ -1,0 +1,58 @@
+/* client/src/index.css */
+
+
+
+/* --- ADD TAILWIND CSS DIRECTIVES --- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------- */
+
+
+/* --- SIMPLIFIED BASE STYLES --- */
+:root {
+  /* Keep only font-family and basic settings */
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  /* Remove conflicting layout properties like display: flex and place-items: center */
+  margin: 0;
+  min-width: 320px;
+  /* Use Tailwind defaults for background and text, or let App.tsx handle it */
+  /* min-height: 100vh; */ 
+}
+
+/* You generally don't need to define styles for h1, button, a, etc., here 
+   if you are styling them exclusively with Tailwind classes in your components. */
+
+/* For example, the following default styles are likely conflicting with Tailwind: */
+/*
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+*/
