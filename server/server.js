@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
-// REMOVE: import { DataAPIClient } from "@datastax/astra-db-ts";
 
 // CHANGE: Import db from config simply to ensure connection starts
 import { db } from "./config/data.js";
@@ -15,24 +14,26 @@ import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
-// REMOVE: The manual DB connection that was here.
-// The connection is now handled inside config/data.js
-
+// Standard Node.js path setup for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// CORS
+// CORS configuration (Note: You may need to update 'origin' to your Vercel URL later)
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // Keep for local dev
     credentials: true,
   })
 );
 
 // JSON + Static uploads
 app.use(express.json());
+
+// NOTE: Vercel does not serve static files via express.static().
+// For production, the 'uploads' folder should be served from Vercel's /public directory
+// or uploaded to a dedicated storage service like Vercel Blob or AWS S3.
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- Routes ---
@@ -42,8 +43,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/items", itemRoutes);
 
-
-
-// --- Start Server ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// --- Vercel Serverless Function Export ---
+// Vercel automatically wraps this exported app instance in its own serverless handler.
+// We no longer need app.listen(PORT, ...).
+export default app;
