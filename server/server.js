@@ -23,10 +23,11 @@ const app = express();
 // CORS configuration (Note: You may need to update 'origin' to your Vercel URL later)
 app.use(
   cors({
-    origin: "http://localhost:5173", // Keep for local dev
+    origin: ["http://localhost:5173", "https://well-walled.vercel.app"],
     credentials: true,
   })
 );
+
 
 // JSON + Static uploads
 app.use(express.json());
