@@ -1,36 +1,71 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import HomePage from './pages/Home';
-import GalleryPage from './pages/GalleryPage';
-import AdminPage from './pages/Admin/AdminPage';
-import Navbar from './components/Navbar';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 
-// --- New Component to handle Conditional Rendering ---
+import HomePage from "./pages/Home";
+import GalleryPage from "./pages/GalleryPage";
+import AdminPage from "./pages/Admin/AdminPage";
+import Navbar from "./components/Navbar";
+import AboutPage from "./pages/AboutPage";
+import CategoryProductPage from "./pages/category/CategoryProductPage";
+import CategoriesPage from "./pages/Admin/CategoriesPage";
+import AdminLogin from "./pages/Admin/AdminLogin"; // ⬅ NEW
+
+// 🔐 Protected Route Component
+const ProtectedRoute = ({ children }: any) => {
+  const token = localStorage.getItem("adminToken");
+  return token ? children : <Navigate to="/admin-login" replace />;
+};
+
+// 🧠 Component for conditional layout (Navbar hide logic)
 const AppContent = () => {
-  // Get the current URL location object
   const location = useLocation();
 
-  // Check if the current path is '/admin'
-  const isAdminRoute = location.pathname === '/admin';
+  // Hide Navbar on ALL admin pages — not just /admin
+  const hideNavbar = location.pathname.startsWith("/admin");
 
   return (
     <>
-      {/* CONDITIONAL RENDERING: Navbar only renders if it is NOT the admin route */}
-      {!isAdminRoute && <Navbar />}
+      {!hideNavbar && <Navbar />}
 
       <Routes>
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
-        {/* The AdminPage will render, but without the Navbar */}
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/products/:categoryId" element={<CategoryProductPage />} />
+
+        <Route path="/admin-login" element={<AdminLogin />} />
+
+        {/* PROTECTED ADMIN ROUTES */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/categories"
+          element={
+            <ProtectedRoute>
+              <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
 };
 
-// --- Main App component (wraps content in Router) ---
 function App() {
   return (
-    // The Router component must wrap everything that uses routing hooks (like useLocation)
     <Router>
       <AppContent />
     </Router>

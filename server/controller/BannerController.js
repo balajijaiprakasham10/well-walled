@@ -1,50 +1,45 @@
-// server/controllers/bannerController.js
-
-const BannerImage = require("../models/BannerImage");
-const fs = require("fs");
-const path = require("path");
+import { BannerCollection } from "../models/Banner.js"; // New Data API collection
+import fs from "fs";
+import path from "path";
+import { ObjectId } from "@datastax/astra-db-ts"; // Required for ID-based queries
 
 // --- UPLOAD OR UPDATE BANNER IMAGE ---
-exports.uploadBanner = async (req, res) => {
+export const uploadBanner = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ msg: "No banner image uploaded." });
     }
 
-    const newImagePath = req.file.path.replace(/\\/g, "/"); // Normalize path
+    const newImagePath = req.file.path.replace(/\\/g, "/");
 
-    // 1. Check if a banner image already exists
-    let existingBanner = await BannerImage.findOne();
+    // Check if a banner already exists
+    const existingBanner = await BannerCollection.findOne({});
 
     if (existingBanner) {
-      // 2. If exists, delete the old file
+      // Delete previously stored banner file
       const oldImagePath = path.join(__dirname, "..", existingBanner.imagePath);
-      fs.unlink(oldImagePath, (err) => {
-        if (err)
-          console.error(
-            `Failed to delete old banner file: ${oldImagePath}`,
-            err
-          );
-      });
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
 
-      // 3. Update the existing banner record
-      existingBanner.imagePath = newImagePath;
-      await existingBanner.save();
-      return res.json({
-        msg: "Banner image updated successfully.",
-        banner: existingBanner,
-      });
-    } else {
-      // 4. If no banner exists, create a new one
-      const newBanner = new BannerImage({ imagePath: newImagePath });
-      await newBanner.save();
-      return res
-        .status(201)
-        .json({
-          msg: "Banner image uploaded successfully.",
-          banner: newBanner,
-        });
+      // Update existing banner document
+      await BannerCollection.updateOne(
+        { _id: new ObjectId(existingBanner._id) },
+        { $set: { imagePath: newImagePath, uploadedAt: new Date() } }
+      );
+
+      return res.json({ msg: "Banner image updated successfully." });
     }
+
+    // Create new banner
+    await BannerCollection.insertOne({
+      imagePath: newImagePath,
+      uploadedAt: new Date(),
+    });
+
+    res.status(201).json({
+      msg: "Banner image uploaded successfully.",
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error during banner upload.");
@@ -52,9 +47,9 @@ exports.uploadBanner = async (req, res) => {
 };
 
 // --- GET BANNER IMAGE ---
-exports.getBanner = async (req, res) => {
+export const getBanner = async (req, res) => {
   try {
-    const banner = await BannerImage.findOne();
+    const banner = await BannerCollection.findOne({});
     if (!banner) {
       return res.status(404).json({ msg: "No banner image found." });
     }
@@ -66,21 +61,21 @@ exports.getBanner = async (req, res) => {
 };
 
 // --- DELETE BANNER IMAGE ---
-exports.deleteBanner = async (req, res) => {
+export const deleteBanner = async (req, res) => {
   try {
-    const banner = await BannerImage.findOne();
+    const banner = await BannerCollection.findOne({});
     if (!banner) {
-      return res.status(404).json({ msg: "No banner image to delete." });
+      return res.status(404).json({ msg: "No banner to delete." });
     }
 
-    // Delete the file from the uploads directory
-    const imagePath = path.join(__dirname, "..", banner.imagePath);
-    fs.unlink(imagePath, (err) => {
-      if (err) console.error(`Failed to delete banner file: ${imagePath}`, err);
-    });
+    // Delete physical file
+    const filePath = path.join(__dirname, "..", banner.imagePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
-    // Delete the record from the database
-    await BannerImage.deleteOne({ _id: banner._id }); // Use deleteOne with query or findByIdAndDelete
+    // Remove the document
+    await BannerCollection.deleteOne({ _id: new ObjectId(banner._id) });
 
     res.json({ msg: "Banner image deleted successfully." });
   } catch (err) {

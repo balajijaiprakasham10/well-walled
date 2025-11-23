@@ -1,14 +1,17 @@
-// server/routes/projectRoutes.js
+import express from "express";
+import { upload } from "../middleware/uploadMiddleware.js";
+import {
+  getProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+} from "../controller/ProjectController.js";
+import { verifyAdmin } from "../middleware/authMiddleware.js";
 
-const express = require("express");
 const router = express.Router();
-const projectController = require("../controller/ProjectController");
-const { upload } = require("../middleware/uploadMiddleware"); // Assuming this exists
 
-// GET all projects
-router.get("/", projectController.getProjects);
+router.get("/", getProjects);
 
-// POST new project (uses upload.fields and createProject)
 router.post(
   "/",
   upload.fields([
@@ -16,10 +19,10 @@ router.post(
     { name: "cad", maxCount: 1 },
     { name: "after", maxCount: 1 },
   ]),
-  projectController.createProject
+  verifyAdmin,
+  createProject
 );
 
-// --- NEW: UPDATE Project (PUT) ---
 router.put(
   "/:id",
   upload.fields([
@@ -27,10 +30,10 @@ router.put(
     { name: "cad", maxCount: 1 },
     { name: "after", maxCount: 1 },
   ]),
-  projectController.updateProject // <-- New controller function
+  verifyAdmin,
+  updateProject
 );
 
-// --- NEW: DELETE Project (DELETE) ---
-router.delete("/:id", projectController.deleteProject); // <-- New controller function
+router.delete("/:id", verifyAdmin, deleteProject);
 
-module.exports = router;
+export default router;

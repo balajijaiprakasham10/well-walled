@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import AdminProjectForm from '../Admin/AdminUploadForm'; // Import the new Project component
-import AdminBannerForm from '../Admin/AdminBannerForm'; // Import the new Banner component
+import AdminProjectForm from '../Admin/AdminUploadForm';
+import AdminBannerForm from '../Admin/AdminBannerForm';
+import CategoriesPage from '../Admin/CategoriesPage'; // ⬅️ Add the new import
+import AdminItemsPage from './AdminItemsPage';
 
-type AdminView = 'projects' | 'banner';
+type AdminView = 'projects' | 'banner' | 'categories'| 'items';
 
 const AdminPage: React.FC = () => {
-    const [currentView, setCurrentView] = useState<AdminView>('projects'); // Default view
+    const [currentView, setCurrentView] = useState<AdminView>('projects');
 
     const renderContent = () => {
         switch (currentView) {
@@ -13,12 +15,17 @@ const AdminPage: React.FC = () => {
                 return <AdminProjectForm />;
             case 'banner':
                 return <AdminBannerForm />;
+            case 'categories':
+                return <CategoriesPage />; // ⬅️ Show categories UI
+            case "items":
+                return <AdminItemsPage />;
+
             default:
                 return <AdminProjectForm />;
         }
     };
 
-    const NavButton: React.FC<{ view: AdminView, label: string }> = ({ view, label }) => (
+    const NavButton: React.FC<{ view: AdminView; label: string }> = ({ view, label }) => (
         <button
             onClick={() => setCurrentView(view)}
             className={`
@@ -35,7 +42,7 @@ const AdminPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 flex">
-            {/* --- Sidebar Navigation --- */}
+            {/* Sidebar */}
             <div className="w-64 bg-white shadow-xl p-6 h-screen sticky top-0">
                 <h2 className="text-2xl font-bold text-gray-900 mb-8 border-b pb-4">
                     🛠️ Admin Panel
@@ -43,10 +50,13 @@ const AdminPage: React.FC = () => {
                 <nav className="space-y-3">
                     <NavButton view="projects" label="Projects" />
                     <NavButton view="banner" label="Homepage Banner" />
+                    <NavButton view="categories" label="Product Categories" /> {/* ⬅️ Add Button */}
+                    <NavButton view="items" label="Products" />
+
                 </nav>
             </div>
 
-            {/* --- Main Content Area --- */}
+            {/* Main Content */}
             <div className="flex-1 overflow-y-auto">
                 <div className="max-w-7xl mx-auto py-8">
                     {renderContent()}
