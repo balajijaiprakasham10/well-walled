@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import type { Category } from "../../types/CategoryTypes";
 
-const API_URL = "http://localhost:5000/api/categories";
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/categories`;
+
 
 const CategoriesPage: React.FC = () => {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -11,9 +13,21 @@ const CategoriesPage: React.FC = () => {
     const [message, setMessage] =
         useState<{ type: "success" | "error"; text: string } | null>(null);
 
+
+    const getAuthConfig = () => {
+        const token = localStorage.getItem("adminToken");
+        return {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        };
+    };
+
+
     const fetchCategories = async () => {
         try {
-            const res = await axios.get(API_URL);
+            const res = await axios.get(API_URL, getAuthConfig());
+
             setCategories(res.data);
         } catch (err) {
             setMessage({ type: "error", text: "Failed to load categories" });
@@ -31,11 +45,13 @@ const CategoriesPage: React.FC = () => {
 
         try {
             if (editCategory) {
-                await axios.put(`${API_URL}/${editCategory._id}`, { name });
+                await axios.put(`${API_URL}/${editCategory._id}`, { name }, getAuthConfig());
+
                 setMessage({ type: "success", text: "Category updated!" });
                 setEditCategory(null);
             } else {
-                await axios.post(API_URL, { name });
+                await axios.post(API_URL, { name }, getAuthConfig());
+
                 setMessage({ type: "success", text: "Category created!" });
             }
 
@@ -50,7 +66,8 @@ const CategoriesPage: React.FC = () => {
         if (!window.confirm("Delete this category?")) return;
 
         try {
-            await axios.delete(`${API_URL}/${id}`);
+            await axios.delete(`${API_URL}/${id}`, getAuthConfig());
+
             setMessage({ type: "success", text: "Category deleted!" });
             fetchCategories();
         } catch (err) {

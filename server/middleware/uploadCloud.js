@@ -2,6 +2,7 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 cloudinary.config({
@@ -10,12 +11,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new CloudinaryStorage({
+// ⚠️ This storage will accept both images & videos for banners.
+const bannerStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "items",
-    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+  params: async (req, file) => {
+    // Decide resource_type based on mimetype
+    const isVideo = file.mimetype.startsWith("video/");
+
+    return {
+      folder: "banners", // your Cloudinary folder
+      resource_type: isVideo ? "video" : "image", // important!
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "mp4", "mov", "webm"],
+      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
+    };
   },
 });
 
-export const upload = multer({ storage });
+// Use this for banner uploads
+export const uploadBannerMedia = multer({ storage: bannerStorage });
+export { cloudinary }; // export if you want to use it in controller

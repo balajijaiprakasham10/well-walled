@@ -1,20 +1,23 @@
 import express from "express";
-import { upload } from "../middleware/uploadMiddleware.js";
+import { uploadBannerMedia } from "../middleware/uploadCloud.js";
 import {
   getProjects,
   createProject,
   updateProject,
   deleteProject,
+  getHomeProjects, // ✅ ADD THIS
 } from "../controller/ProjectController.js";
+
 import { verifyAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", getProjects);
+router.get("/home", getHomeProjects);
 
 router.post(
   "/",
-  upload.fields([
+  uploadBannerMedia.fields([
     { name: "before", maxCount: 1 },
     { name: "cad", maxCount: 1 },
     { name: "after", maxCount: 1 },
@@ -25,7 +28,7 @@ router.post(
 
 router.put(
   "/:id",
-  upload.fields([
+  uploadBannerMedia.fields([
     { name: "before", maxCount: 1 },
     { name: "cad", maxCount: 1 },
     { name: "after", maxCount: 1 },

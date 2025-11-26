@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import type { Project } from '../types/ProjectTypes';
 
-const API_URL = 'http://localhost:5000/api/projects';
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/projects`;
 
 const GalleryPage: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -56,23 +56,28 @@ const GalleryPage: React.FC = () => {
                     <hr />
 
                     {/* Images */}
+                    {/* Images */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {(["before", "cad", "after"] as const).map((view) => (
                             <div key={view} className="relative group cursor-pointer">
                                 <img
-                                    src={`${API_BASE_URL}/${project.images[view]}`}
-                                    onClick={() =>
-                                        openPreview(`${API_BASE_URL}/${project.images[view]}`)
-                                    }
-                                    className="rounded-lg shadow-lg w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    src={project.images[view]}
+
+                                    alt={`${project.title} - ${view}`}
+                                    onClick={() => openPreview(project.images[view])
+}
+                                    className="rounded-lg shadow-lg w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                                    onError={(e) => {
+                                        e.currentTarget.src = "https://placehold.co/600x400?text=Image+not+found";
+                                    }}
                                 />
-                                <span className="absolute top-3 left-3 bg-black bg-opacity-50 text-white text-xs px-3 py-1 rounded">
+                                <span className="absolute top-3 left-3 bg-black/60 text-white text-xs px-3 py-1 rounded">
                                     {view.toUpperCase()}
                                 </span>
                             </div>
                         ))}
-
                     </div>
+
                 </div>
             ))}
 

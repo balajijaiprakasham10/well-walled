@@ -11,7 +11,9 @@ interface Item {
     images: string[];
 }
 
-const API_URL = "http://localhost:5000/api/items/category/";
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/items/category/`;
+
 
 const CategoryProductPage = () => {
     const { categoryId } = useParams();

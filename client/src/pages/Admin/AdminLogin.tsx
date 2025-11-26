@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth/login";
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/auth/login`;
 
 export default function AdminLogin() {
     const [username, setUsername] = useState("");

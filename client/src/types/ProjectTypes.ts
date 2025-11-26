@@ -5,6 +5,7 @@ export interface ProjectImage {
 }
 
 export interface Project {
+    showOnHome: any;
     _id: string;
     title: string;
     description: string;

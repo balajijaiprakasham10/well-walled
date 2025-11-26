@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import type { Category } from "../../types/CategoryTypes";
 
-const API_URL = "http://localhost:5000/api/items";
-const CATEGORIES_URL = "http://localhost:5000/api/categories";
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/items`;
+const CATEGORIES_URL = `${API_BASE}/api/categories`;
 
 interface Item {
     _id: string;

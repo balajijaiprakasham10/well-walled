@@ -1,44 +1,65 @@
-import { BannerCollection } from "../models/Banner.js"; // New Data API collection
-import fs from "fs";
-import path from "path";
-import { ObjectId } from "@datastax/astra-db-ts"; // Required for ID-based queries
+import { BannerCollection } from "../models/Banner.js";
+import { cloudinary } from "../middleware/uploadCloud.js"; // from step 1
 
-// --- UPLOAD OR UPDATE BANNER IMAGE ---
+// --- UPLOAD OR UPDATE BANNER (IMAGE OR VIDEO) ---
 export const uploadBanner = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ msg: "No banner image uploaded." });
+      return res.status(400).json({ msg: "No banner file uploaded." });
     }
 
-    const newImagePath = req.file.path.replace(/\\/g, "/");
+    // Multer + Cloudinary gives us these:
+const { path: mediaUrl, filename: publicId } = req.file;
+
+// ✅ Reliable video detection
+const mediaType = req.file.mimetype.startsWith("video") ? "video" : "image";
+
+
 
     // Check if a banner already exists
     const existingBanner = await BannerCollection.findOne({});
 
     if (existingBanner) {
-      // Delete previously stored banner file
-      const oldImagePath = path.join(__dirname, "..", existingBanner.imagePath);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // Delete previous media from Cloudinary
+      if (existingBanner.publicId) {
+        try {
+          await cloudinary.uploader.destroy(existingBanner.publicId, {
+            resource_type: existingBanner.mediaType || "image",
+            invalidate: true,
+          });
+        } catch (err) {
+          console.error("Error deleting old Cloudinary banner:", err.message);
+        }
       }
 
       // Update existing banner document
-      await BannerCollection.updateOne(
-        { _id: new ObjectId(existingBanner._id) },
-        { $set: { imagePath: newImagePath, uploadedAt: new Date() } }
-      );
+     await BannerCollection.updateOne(
+       { _id: existingBanner._id },
+       {
+         $set: {
+           mediaUrl,
+           publicId,
+           mediaType,
+           uploadedAt: new Date(),
+         },
+       }
+     );
 
-      return res.json({ msg: "Banner image updated successfully." });
+
+      return res.json({ msg: "Banner updated successfully." });
     }
 
     // Create new banner
+    // Create new banner
     await BannerCollection.insertOne({
-      imagePath: newImagePath,
+      mediaUrl,
+      publicId,
+      mediaType,
       uploadedAt: new Date(),
     });
 
     res.status(201).json({
-      msg: "Banner image uploaded successfully.",
+      msg: "Banner uploaded successfully.",
     });
   } catch (err) {
     console.error(err.message);
@@ -46,12 +67,12 @@ export const uploadBanner = async (req, res) => {
   }
 };
 
-// --- GET BANNER IMAGE ---
+// --- GET BANNER (IMAGE OR VIDEO) ---
 export const getBanner = async (req, res) => {
   try {
     const banner = await BannerCollection.findOne({});
     if (!banner) {
-      return res.status(404).json({ msg: "No banner image found." });
+      return res.status(404).json({ msg: "No banner found." });
     }
     res.json(banner);
   } catch (err) {
@@ -60,7 +81,7 @@ export const getBanner = async (req, res) => {
   }
 };
 
-// --- DELETE BANNER IMAGE ---
+// --- DELETE BANNER MEDIA ---
 export const deleteBanner = async (req, res) => {
   try {
     const banner = await BannerCollection.findOne({});
@@ -68,16 +89,22 @@ export const deleteBanner = async (req, res) => {
       return res.status(404).json({ msg: "No banner to delete." });
     }
 
-    // Delete physical file
-    const filePath = path.join(__dirname, "..", banner.imagePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Delete file from Cloudinary
+    if (banner.publicId) {
+      try {
+        await cloudinary.uploader.destroy(banner.publicId, {
+          resource_type: banner.mediaType || "image",
+          invalidate: true,
+        });
+      } catch (err) {
+        console.error("Error deleting Cloudinary banner:", err.message);
+      }
     }
 
     // Remove the document
-    await BannerCollection.deleteOne({ _id: new ObjectId(banner._id) });
+    await BannerCollection.deleteOne({ _id: banner._id });
 
-    res.json({ msg: "Banner image deleted successfully." });
+    res.json({ msg: "Banner deleted successfully." });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error during banner deletion.");
