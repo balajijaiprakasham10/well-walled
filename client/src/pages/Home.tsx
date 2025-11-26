@@ -204,7 +204,7 @@ const HomePage: React.FC = () => {
 
     // 🌟 UPDATED FEATURED PROJECTS 🌟
     const FeaturedProjects = () => {
-        const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, path: string) => {
+        const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, _path: string) => {
             e.currentTarget.src = `https://placehold.co/700x700/D1D5DB/4B5563?text=Image+Load+Error`;
         };
 
