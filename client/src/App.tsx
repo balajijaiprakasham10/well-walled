@@ -10,10 +10,12 @@ import HomePage from "./pages/Home";
 import GalleryPage from "./pages/GalleryPage";
 import AdminPage from "./pages/Admin/AdminPage";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import AboutPage from "./pages/AboutPage";
 import CategoryProductPage from "./pages/category/CategoryProductPage";
+import ProjectDetailPage from "./pages/category/CategoryProductDetail";
 import CategoriesPage from "./pages/Admin/CategoriesPage";
-import AdminLogin from "./pages/Admin/AdminLogin"; // ⬅ NEW
+import AdminLogin from "./pages/Admin/AdminLogin";
 
 // 🔐 Protected Route Component
 const ProtectedRoute = ({ children }: any) => {
@@ -21,16 +23,17 @@ const ProtectedRoute = ({ children }: any) => {
   return token ? children : <Navigate to="/admin-login" replace />;
 };
 
-// 🧠 Component for conditional layout (Navbar hide logic)
+// 🧠 Component for conditional layout
 const AppContent = () => {
   const location = useLocation();
 
-  // Hide Navbar on ALL admin pages — not just /admin
-  const hideNavbar = location.pathname.startsWith("/admin");
+  // Check if the current path starts with "/admin" (covers /admin, /admin/categories, /admin-login)
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {/* Only show Navbar if NOT an admin route */}
+      {!isAdminRoute && <Navbar />}
 
       <Routes>
         {/* PUBLIC ROUTES */}
@@ -38,6 +41,7 @@ const AppContent = () => {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/products/:categoryId" element={<CategoryProductPage />} />
+        <Route path="/products/:category/:id" element={<ProjectDetailPage />} />
 
         <Route path="/admin-login" element={<AdminLogin />} />
 
@@ -60,6 +64,9 @@ const AppContent = () => {
           }
         />
       </Routes>
+
+      {/* Only show Footer if NOT an admin route */}
+      {!isAdminRoute && <Footer />}
     </>
   );
 };

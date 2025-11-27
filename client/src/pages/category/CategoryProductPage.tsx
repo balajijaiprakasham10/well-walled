@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 
@@ -11,99 +11,149 @@ interface Item {
     images: string[];
 }
 
-const API_BASE = (import.meta as any).env.VITE_API;
-const API_URL = `${API_BASE}/api/items/category/`;
+interface Category {
+    _id: string;
+    name: string;
+}
 
+const API_BASE = (import.meta as any).env.VITE_API;
+
+// Define both endpoints
+const ALL_ITEMS_URL = `${API_BASE}/api/items`; // Endpoint for "Show All"
+const CATEGORY_ITEMS_URL = `${API_BASE}/api/items/category/`; // Endpoint for specific category
+const CATEGORIES_LIST_URL = `${API_BASE}/api/categories`;
 
 const CategoryProductPage = () => {
     const { categoryId } = useParams();
+    const navigate = useNavigate();
+
     const [items, setItems] = useState<Item[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // 1. Updated Fetch Logic
     const fetchItems = async () => {
+        setLoading(true);
         try {
-            const res = await axios.get(API_URL + categoryId);
-            setItems(res.data);
+            let response;
+
+            // CHECK: Is the user asking for "all"?
+            if (categoryId === "all") {
+                // Fetch ALL items from the main items endpoint
+                response = await axios.get(ALL_ITEMS_URL);
+            } else {
+                // Fetch specific category items
+                response = await axios.get(CATEGORY_ITEMS_URL + categoryId);
+            }
+
+            setItems(response.data);
         } catch (err) {
-            console.error("❌ Failed:", err);
+            console.error("❌ Failed to load items:", err);
         } finally {
             setLoading(false);
         }
     };
 
+    const fetchCategories = async () => {
+        try {
+            const res = await axios.get(CATEGORIES_LIST_URL);
+            setCategories(res.data);
+        } catch (err) {
+            console.error("❌ Failed to load categories:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
     useEffect(() => {
         if (categoryId) fetchItems();
     }, [categoryId]);
 
-    if (loading) return <p className="p-6 text-gray-500">Loading...</p>;
-    if (items.length === 0) return <p className="p-6 text-gray-500">No items found.</p>;
-
-    const item = items[0];
-
-    const nextImage = () =>
-        setCurrentIndex((prev) => (prev + 1) % item.images.length);
-    const prevImage = () =>
-        setCurrentIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
-
     return (
-        <div className="bg-white">
-            <main className="max-w-7xl mx-auto pt-16 pb-10 px-6">
+        <div className="bg-white min-h-screen">
 
-                {/* Title + Description Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-                    <h2 className="text-6xl font-light text-gray-900 capitalize md:col-span-1">
-                        {item.category}
-                    </h2>
+            <div className="pt-24 pb-10 px-6 max-w-[1400px] mx-auto text-center md:text-left">
 
-                    <p className="text-lg text-gray-600 leading-relaxed border-l-4 pl-4 border-indigo-500 md:col-span-2">
-                        {item.description}
-                    </p>
-                </div>
+                {/* Dynamic Title: Show "Selected Category" or "All Projects" */}
+                <h1 className="text-4xl md:text-5xl font-serif text-gray-900 uppercase tracking-widest mb-8">
+                    {categoryId === "all" ? "All Projects" : categoryId}
+                </h1>
 
-                {/* Image Slider */}
-                <div className="relative w-full flex justify-center items-center mt-6">
-                    <motion.img
-                        key={currentIndex}
-                        src={item.images[currentIndex]}
-                        alt="Preview"
-                        className="rounded-lg shadow-lg object-cover w-full max-h-[500px]"
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6 }}
-                    />
+                {/* Categories Menu */}
+                <div className="flex flex-wrap gap-8 items-center border-b border-gray-200 pb-4">
 
-                    {/* Arrows */}
-                    <button
-                        onClick={prevImage}
-                        className="absolute left-4 text-3xl bg-white shadow-lg rounded-full px-2 py-1"
+                    {/* SHOW ALL BUTTON */}
+                    <span
+                        onClick={() => navigate('/products/all')}
+                        className={`text-xs font-bold uppercase tracking-[0.2em] cursor-pointer transition-colors ${categoryId === "all"
+                                ? "text-black border-b-2 border-black pb-4 -mb-4.5" // Active State
+                                : "text-gray-400 hover:text-black"
+                            }`}
                     >
-                        ❮
-                    </button>
+                        Show All
+                    </span>
 
-                    <button
-                        onClick={nextImage}
-                        className="absolute right-4 text-3xl bg-white shadow-lg rounded-full px-2 py-1"
-                    >
-                        ❯
-                    </button>
-                </div>
-
-                {/* Thumbnails Strip */}
-                <div className="flex gap-4 overflow-x-auto mt-6 pb-3">
-                    {item.images.map((img, index) => (
-                        <motion.img
-                            key={index}
-                            src={img}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`h-32 rounded-lg cursor-pointer object-cover transition border-2 ${currentIndex === index
-                                    ? "border-indigo-600"
-                                    : "border-transparent opacity-70 hover:opacity-100"
+                    {/* Category Buttons */}
+                    {categories.map((cat) => (
+                        <span
+                            key={cat._id}
+                            onClick={() => navigate(`/products/${cat.name}`)}
+                            className={`text-xs font-bold uppercase tracking-[0.2em] cursor-pointer transition-colors ${categoryId === cat.name
+                                    ? "text-black border-b-2 border-black pb-4 -mb-4.5" // Active State
+                                    : "text-gray-400 hover:text-black"
                                 }`}
-                        />
+                        >
+                            {cat.name}
+                        </span>
                     ))}
                 </div>
-            </main>
+            </div>
+
+            {/* Content Grid */}
+            {loading ? (
+                <div className="h-64 flex items-center justify-center text-gray-500 uppercase tracking-widest">
+                    Loading projects...
+                </div>
+            ) : items.length === 0 ? (
+                <div className="h-64 flex items-center justify-center text-gray-500 uppercase tracking-widest">
+                    No projects found.
+                </div>
+            ) : (
+                <main className="max-w-[1400px] mx-auto px-6 pb-20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+                        {items.map((item, index) => (
+                            <motion.div
+                                key={item._id}
+                                // Pass the actual category of the item, or "all" if you prefer the URL to stay "all"
+                                onClick={() => navigate(`/products/${item.category}/${item._id}`)}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: index * 0.1 }}
+                                className="group cursor-pointer"
+                            >
+                                <div className="overflow-hidden mb-5">
+                                    <img
+                                        src={item.images[0]}
+                                        alt={item.title}
+                                        className="w-full h-[450px] object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                                    />
+                                </div>
+
+                                <div className="flex items-center space-x-2 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase">
+                                    <h3 className="text-gray-900 group-hover:text-black transition-colors">
+                                        {item.title}
+                                    </h3>
+                                    <span className="text-amber-500">•</span>
+                                    <span className="text-gray-400">{item.category}</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </main>
+            )}
         </div>
     );
 };

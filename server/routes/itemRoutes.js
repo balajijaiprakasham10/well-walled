@@ -5,6 +5,7 @@ import {
   addItem,
   deleteItem,
   getItemsByCategory,
+  getItemById, // 1. IMPORT THIS
 } from "../controller/itemController.js";
 import { verifyAdmin } from "../middleware/authMiddleware.js";
 
@@ -13,10 +14,15 @@ const router = express.Router();
 // GET ALL ITEMS
 router.get("/", getItems);
 
-// ⭐ GET ITEMS BY CATEGORY
+// GET ITEMS BY CATEGORY
 router.get("/category/:category", getItemsByCategory);
 
-// ADD ITEM — multiple images
+// ⭐ GET SINGLE ITEM BY ID (2. ADD THIS ROUTE)
+// Important: Keep this below /category/ or specific routes to avoid conflicts,
+// though here the paths are distinct enough so it's safe.
+router.get("/:id", getItemById);
+
+// ADD ITEM
 router.post("/", verifyAdmin, uploadBannerMedia.array("images", 10), addItem);
 
 // DELETE ITEM

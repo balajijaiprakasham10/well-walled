@@ -8,12 +8,14 @@ const API_URL = `${API_BASE}/api/categories`;
 
 const Navbar: React.FC = () => {
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
+
+  const isTransparentPage =
+    location.pathname === "/" ||
+    (location.pathname.startsWith("/products") && location.pathname.split("/").length >= 4) ||
+    location.pathname.startsWith("/project/");
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
-    []
-  );
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [scrolled, setScrolled] = useState(false);
 
   const navItems = [
@@ -22,7 +24,6 @@ const Navbar: React.FC = () => {
     { name: "About Us", path: "/about" },
   ];
 
-  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -35,18 +36,16 @@ const Navbar: React.FC = () => {
     fetchCategories();
   }, []);
 
-  // ✅ Scroll behavior only for Home
   useEffect(() => {
-    if (!isHomePage) {
-      setScrolled(true); // Always solid for other pages
+    if (!isTransparentPage) {
+      setScrolled(true);
       return;
     }
-
     const onScroll = () => setScrolled(window.scrollY > 80);
-
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isHomePage]);
+  }, [isTransparentPage, location.pathname]);
 
   const dropdownVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -56,40 +55,42 @@ const Navbar: React.FC = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isHomePage
+      className={`${isTransparentPage ? "fixed" : "sticky"
+        } top-0 left-0 w-full z-50 transition-all duration-300 ${isTransparentPage
           ? scrolled
-            ? "bg-white shadow-md"
+            ? "bg-[#5d8d8d] shadow-md"
             : "bg-transparent"
-          : "bg-white shadow-md"
+        : "bg-[#5d8d8d] shadow-md"
         }`}
     >
 
-
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="flex justify-between items-center h-16">
 
-          {/* LOGO */}
-          <Link
-            to="/"
-            className={`text-2xl font-bold transition ${
-              isHomePage && !scrolled ? "text-white" : "text-gray-900"
-            }`}
-          >
-            WELLWALLED HABITAT
+        {/* 👇 1. ALIGNMENT FIX: Used 'items-center' and removed top padding */}
+        <div className="flex justify-between items-center h-[90px]">
+
+          <Link to="/" className="flex items-center -ml-20">
+            <img
+              src="/logo.png"
+              alt="WellWalled Habitat"
+              /* 👇 2. SIZE FIX: Increased height to 70px (nav is 95px, so this fills it well) */
+              /* Removed translate-y to keep it perfectly centered */
+              className={`h-[200px] w-auto object-contain transition-all duration-300  ${isTransparentPage && !scrolled ? "brightness-0 invert" : ""
+                }`}
+            />
           </Link>
 
           {/* NAV ITEMS */}
           <div className="hidden md:flex space-x-8 items-center">
-
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`font-medium text-lg pb-1 border-b-2 transition ${
-                  location.pathname === item.path
-                    ? "border-indigo-600"
-                    : "border-transparent hover:border-gray-400"
-                } ${isHomePage && !scrolled ? "text-white" : "text-gray-900"}`}
+                /* 👇 3. TEXT ALIGNMENT: Removed pb-1 to ensure text is truly centered vertically */
+                className={`font-medium text-lg border-b-2 transition ${location.pathname === item.path
+                  ? "border-white"
+                  : "border-transparent hover:border-white"
+                  } ${isTransparentPage && !scrolled ? "text-white" : "text-white"}`}
               >
                 {item.name}
               </Link>
@@ -102,9 +103,8 @@ const Navbar: React.FC = () => {
               onMouseLeave={() => setDropdownOpen(false)}
             >
               <button
-                className={`font-medium text-lg pb-1 border-b-2 transition border-transparent hover:border-gray-400 ${
-                  isHomePage && !scrolled ? "text-white" : "text-gray-900"
-                }`}
+                className={`font-medium text-lg border-b-2 transition border-transparent hover:border-gray-400 ${isTransparentPage && !scrolled ? "text-white" : "text-white"
+                  }`}
               >
                 Products ▾
               </button>
@@ -116,13 +116,13 @@ const Navbar: React.FC = () => {
                     animate="visible"
                     exit="exit"
                     variants={dropdownVariants}
-                    className={`absolute top-10 left-0 w-48 rounded-lg shadow-xl transition ${
-                      isHomePage
-                        ? scrolled
-                          ? "bg-white"
-                          : "bg-black/80 backdrop-blur-md"
-                        : "bg-white"
-                    }`}
+                    // Adjusted top position slightly to align with center
+                    className={`absolute top-[50px] left-0 w-48 rounded-lg shadow-xl transition ${isTransparentPage
+                      ? scrolled
+                        ? "bg-white"
+                        : "bg-black/80 backdrop-blur-md"
+                      : "bg-white"
+                      }`}
                   >
                     {categories.length === 0 ? (
                       <p className="px-4 py-2 text-sm text-gray-400">
@@ -133,11 +133,10 @@ const Navbar: React.FC = () => {
                         <Link
                           key={cat._id}
                           to={`/products/${cat.name}`}
-                          className={`block px-4 py-2 text-sm transition ${
-                            isHomePage && !scrolled
-                              ? "text-white hover:bg-white/10"
-                              : "text-gray-700 hover:bg-gray-100"
-                          }`}
+                          className={`block px-4 py-2 text-sm transition ${isTransparentPage && !scrolled
+                            ? "text-white hover:bg-white/10"
+                            : "text-gray-700 hover:bg-gray-100"
+                            }`}
                         >
                           {cat.name}
                         </Link>
@@ -147,7 +146,6 @@ const Navbar: React.FC = () => {
                 )}
               </AnimatePresence>
             </div>
-
           </div>
         </div>
       </div>

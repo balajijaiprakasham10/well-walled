@@ -24,10 +24,11 @@ const app = express();
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://well-walled.vercel.app"],
+    origin: ["http://localhost:5174", "https://well-walled.vercel.app"],
     credentials: true,
   })
 );
+
 
 app.use(express.json());
 

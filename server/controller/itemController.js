@@ -87,3 +87,31 @@ export const getItemsByCategory = async (req, res) => {
     res.status(500).json({ msg: "Failed to fetch items" });
   }
 };
+
+
+export const getItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log("🔍 Fetching ID:", id); // Helpful for debugging
+
+    // 1. Attempt to find by String ID (Matches your UUIDs)
+    let item = await ItemCollection.findOne({ _id: id });
+
+    // 2. Fallback: If not found as a string, AND it happens to be a valid Mongo ObjectId, try that.
+    // This handles cases where you might have mixed data (some new UUIDs, some old ObjectIds)
+    if (!item && ObjectId.isValid(id)) {
+      item = await ItemCollection.findOne({ _id: new ObjectId(id) });
+    }
+
+    if (!item) {
+      console.log("❌ Item not found in DB");
+      return res.status(404).json({ msg: "Project not found" });
+    }
+
+    res.json(item);
+  } catch (err) {
+    console.error("❌ Fetch Single Item Error:", err);
+    res.status(500).json({ msg: "Server Error", error: err.message });
+  }
+};

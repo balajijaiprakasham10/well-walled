@@ -58,7 +58,13 @@ const AdminItemsPage: React.FC = () => {
         Array.from(files).forEach((file) => formData.append("images", file));
 
         try {
-            await axios.post(API_URL, formData);
+            await axios.post(API_URL, formData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
             setMessage({ type: "success", text: "Item added successfully!" });
             setTitle("");
             setDescription("");
@@ -72,7 +78,12 @@ const AdminItemsPage: React.FC = () => {
 
     const deleteItem = async (id: string) => {
         if (!window.confirm("Delete this item?")) return;
-        await axios.delete(`${API_URL}/${id}`);
+        await axios.delete(`${API_URL}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+            },
+        });
+
         fetchItems();
     };
 
