@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/categories";
+const API_BASE = (import.meta as any).env.VITE_API;
+const API_URL = `${API_BASE}/api/categories`;
 
 const Navbar: React.FC = () => {
   const location = useLocation();
