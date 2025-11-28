@@ -148,6 +148,9 @@ const GalleryDetail = () => {
     const { id } = useParams();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     useEffect(() => {
         const fetchProject = async () => {

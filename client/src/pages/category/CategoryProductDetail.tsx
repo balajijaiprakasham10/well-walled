@@ -175,7 +175,9 @@ const ProjectDetailPage = () => {
     const { id } = useParams();
     const [item, setItem] = useState<Item | null>(null);
     const [loading, setLoading] = useState(true);
-
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
     useEffect(() => {
         const fetchItem = async () => {
             try {
