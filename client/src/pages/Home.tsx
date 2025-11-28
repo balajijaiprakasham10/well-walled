@@ -82,14 +82,12 @@ const HomePage: React.FC = () => {
                 ) : (
                     <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url("${banner.mediaUrl}")` }} />
                 )}
-                {/* Overlay attached to background */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/10"></div>
             </div>
         );
     };
 
     // 2. CONTENT ONLY (Scrollable)
-    // This sits in the flow of the document and scrolls UP, leaving the background behind.
     const BannerContent = () => {
         return (
             <div className="h-screen w-full flex items-center justify-center relative z-0">
@@ -107,13 +105,13 @@ const HomePage: React.FC = () => {
                         <div className="flex gap-4 justify-center">
                             <button
                                 onClick={() => navigate('/gallery')}
-                                className="bg-white text-black px-6 py-3 rounded-full"
+                                className="bg-white text-black px-6 py-3 rounded-full hover:bg-gray-100 transition"
                             >
                                 View Projects
                             </button>
                             <button
                                 onClick={() => navigate('/contact')}
-                                className="border border-white text-white px-6 py-3 rounded-full"
+                                className="border border-white text-white px-6 py-3 rounded-full hover:bg-white/10 transition"
                             >
                                 Contact Us
                             </button>
@@ -131,10 +129,10 @@ const HomePage: React.FC = () => {
                 <p className="text-lg text-gray-600 mb-16">India's Only Truly End To End Interior Design Agency</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     {services.map((service, index) => (
-                        <div key={index} className="p-6 hover:shadow-lg transition rounded">
-                            <service.icon className="w-14 h-14 mx-auto mb-4" />
-                            <h3 className="font-semibold mb-3">{service.title}</h3>
-                            <p className="text-gray-600">{service.description}</p>
+                        <div key={index} className="p-6 hover:shadow-lg transition rounded-lg border border-transparent hover:border-gray-100">
+                            <service.icon className="w-14 h-14 mx-auto mb-4 text-gray-800" />
+                            <h3 className="font-semibold mb-3 text-xl">{service.title}</h3>
+                            <p className="text-gray-600 leading-relaxed">{service.description}</p>
                         </div>
                     ))}
                 </div>
@@ -142,6 +140,8 @@ const HomePage: React.FC = () => {
         </section>
     );
 
+    // ✅ UPDATED FEATURED PROJECTS SECTION
+    // ✅ UPDATED FEATURED PROJECTS SECTION (Stacked Cards on ALL devices)
     const FeaturedProjects = () => {
         const resolveImage = (project: any) => {
             if (project.images?.after && project.images.after.startsWith("http")) return project.images.after;
@@ -152,11 +152,12 @@ const HomePage: React.FC = () => {
         };
 
         return (
-            <div className="bg-white">
-                <div className="max-w-7xl mx-auto px-4 pt-20 pb-10">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+            <div className="bg-gray-50"> {/* Darker background to make white cards pop */}
+                <div className="max-w-7xl mx-auto px-4 pt-10 pb-4 lg:pt-20 lg:pb-10">
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                         Featured Projects
                     </h2>
+                    <p className="text-gray-500">Explore our finest transformations.</p>
                 </div>
 
                 <div className="relative">
@@ -168,27 +169,66 @@ const HomePage: React.FC = () => {
                             return (
                                 <div
                                     key={project._id}
-                                    className="sticky top-0 h-screen flex flex-col md:flex-row bg-white"
-                                    style={{ zIndex: index + 1 }}
+                                    className={`
+                                      sticky top-0 
+                                      h-screen 
+                                      flex flex-col lg:flex-row 
+                                      bg-white 
+                                      overflow-hidden
+                                      /* Stacked Card Styling */
+                                        lg:rounded-none 
+                                      shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none
+                                      border-t border-gray-100 lg:border-none
+                                    `}
+                                    style={{
+                                        zIndex: index + 1
+                                    }}
                                 >
-                                    <div className="w-full md:w-1/2 flex items-center justify-center p-10 md:p-16 border-r border-gray-100 bg-white">
-                                        <div className="max-w-md">
-                                            <p className="text-xs tracking-widest text-red-600 uppercase mb-4">Residential</p>
-                                            <h3 className="text-4xl md:text-6xl font-light mb-6">{project.title}</h3>
-                                            <p className="text-lg text-gray-500 mb-8">{project.description}</p>
-                                            <button onClick={() => navigate('/gallery')} className="group text-sm font-bold tracking-widest border-b-2 border-black pb-1">
-                                                View Project →
+                                    {/* MOBILE LAYOUT: 
+                                      1. Image takes top 50-60% 
+                                      2. Text takes bottom 40-50%
+                                    */}
+
+                                    {/* IMAGE SECTION */}
+                                    <div className="w-full h-[55%] lg:h-full lg:w-1/2 order-1 lg:order-2 relative">
+                                        <img
+                                            src={img}
+                                            alt={project.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        {/* Gradient overlay for mobile text readability if needed, or just style */}
+                                        <div className="lg:hidden absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20"></div>
+                                    </div>
+
+                                    {/* TEXT SECTION */}
+                                    <div className="w-full h-[45%] lg:h-full lg:w-1/2 flex flex-col justify-center p-6 md:p-12 lg:p-16 bg-white order-2 lg:order-1 relative z-10">
+                                        <div className="max-w-md mx-auto lg:mx-0 text-center lg:text-left overflow-y-auto lg:overflow-visible">
+                                            <p className="text-xs tracking-widest text-red-600 uppercase mb-2 lg:mb-4 font-bold">Residential</p>
+
+                                            <h3 className="text-2xl md:text-4xl lg:text-6xl font-light mb-3 lg:mb-6 leading-tight">
+                                                {project.title}
+                                            </h3>
+
+                                            {/* Line clamp to prevent text overflowing on small screens */}
+                                            <p className="text-sm md:text-lg text-gray-500 mb-6 lg:mb-8 line-clamp-3 md:line-clamp-none">
+                                                {project.description}
+                                            </p>
+
+                                            <button
+                                                onClick={() => navigate('/gallery')}
+                                                className="inline-block text-xs md:text-sm font-bold tracking-widest border-b-2 border-black pb-1 hover:text-red-600 hover:border-red-600 transition-colors uppercase"
+                                            >
+                                                View Project
                                             </button>
                                         </div>
-                                    </div>
-                                    <div className="w-full md:w-1/2 h-full">
-                                        <img src={img} alt={project.title} className="w-full h-full object-cover" />
                                     </div>
                                 </div>
                             );
                         })
                     )}
                 </div>
+                {/* Spacer to allow the last card to be scrolled past if needed, or just end of section */}
+                <div className="h-20 bg-white"></div>
             </div>
         );
     };
@@ -197,15 +237,8 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="home-page relative">
-
-            {/* 1. FIXED BACKGROUND (Parallax) - Stays still */}
             <BannerBackground />
-
-            {/* 2. SCROLLABLE CONTENT - Moves Up */}
-            {/* The Banner Text Card sits here now, so it scrolls away */}
             <BannerContent />
-
-            {/* 3. WHITE CONTENT LAYER - Slides over the fixed background */}
             <div className="relative z-10 bg-white shadow-2xl">
                 <WhatWeDoSection />
                 <FeaturedProjects />
