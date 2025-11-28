@@ -3,196 +3,196 @@ import axios from 'axios';
 
 const API_BASE = (import.meta as any).env.VITE_API;
 const API_URL = `${API_BASE}/api/banner`;
+const CATEGORY_URL = `${API_BASE}/api/categories`;
 
-// ✅ Updated interface to support image OR video
 interface BannerData {
     _id: string;
+    page: string;
     mediaUrl: string;
     mediaType: "image" | "video";
     uploadedAt: string;
 }
 
+interface Category {
+    _id: string;
+    name: string;
+}
+
+// ✅ STATIC PAGES
+const STATIC_PAGES = [
+    "home",
+    "gallery",
+    "about",
+    
+];
+
 const AdminBannerForm: React.FC = () => {
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [currentBanner, setCurrentBanner] = useState<BannerData | null>(null);
+    const [, setCategories] = useState<Category[]>([]);
+    const [allPages, setAllPages] = useState<string[]>(STATIC_PAGES);
+
+    const [selectedPage, setSelectedPage] = useState<string>(STATIC_PAGES[0]);
     const [bannerLoading, setBannerLoading] = useState(false);
     const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const getAuthConfig = () => {
         const token = localStorage.getItem("adminToken");
-        return {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        };
+        return { headers: { Authorization: `Bearer ${token}` } };
     };
 
-    // --- FETCH BANNER ---
+    // ================= FETCH CATEGORIES =================
+    const fetchCategories = async () => {
+        try {
+            const res = await axios.get<Category[]>(CATEGORY_URL);
+            setCategories(res.data);
+
+            // ✅ Merge static pages + dynamic category pages
+            const categoryPages = res.data.map(c => `${c.name}`);
+            setAllPages([...STATIC_PAGES, ...categoryPages]);
+
+        } catch (err) {
+            console.error("Failed to load categories", err);
+        }
+    };
+
+    // ================= FETCH BANNER =================
     const fetchBanner = useCallback(async () => {
         setBannerLoading(true);
         try {
-            const response = await axios.get<BannerData>(API_URL);
-            setCurrentBanner(response.data);
+            const res = await axios.get<BannerData>(`${API_URL}?page=${selectedPage}`);
+            setCurrentBanner(res.data);
             setBannerMessage(null);
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.status === 404) {
                 setCurrentBanner(null);
             } else {
-                console.error('Error fetching banner:', err);
+                console.error(err);
                 setBannerMessage({ type: 'error', text: 'Failed to load banner.' });
             }
         } finally {
             setBannerLoading(false);
         }
+    }, [selectedPage]);
+
+    useEffect(() => {
+        fetchCategories();
     }, []);
 
     useEffect(() => {
         fetchBanner();
     }, [fetchBanner]);
 
-    // --- FILE CHANGE ---
+    // ================= HANDLERS =================
     const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         setBannerFile(file);
     };
 
-    // --- UPLOAD ---
     const handleBannerUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        setBannerLoading(true);
-        setBannerMessage(null);
-
-        if (!bannerFile) {
-            setBannerMessage({ type: 'error', text: 'Please select a banner image or video.' });
-            setBannerLoading(false);
-            return;
-        }
+        if (!bannerFile) return setBannerMessage({ type: 'error', text: 'Select a file' });
 
         const data = new FormData();
-        data.append('bannerFile', bannerFile); // ✅ MUST MATCH BACKEND
-
-        try {
-            await axios.post(API_URL, data, getAuthConfig());
-            setBannerMessage({ type: 'success', text: 'Banner uploaded successfully!' });
-            setBannerFile(null);
-            fetchBanner();
-        } catch (error) {
-            console.error('Banner upload failed:', error);
-            const errorMsg = axios.isAxiosError(error)
-                ? error.response?.data?.msg || 'Upload failed.'
-                : 'Server error.';
-            setBannerMessage({ type: 'error', text: errorMsg });
-        } finally {
-            setBannerLoading(false);
-        }
-    };
-
-    // --- DELETE ---
-    const handleBannerDelete = async () => {
-        if (!window.confirm("Are you sure you want to delete the banner?")) return;
+        data.append("page", selectedPage); // IMPORTANT FIRST
+        data.append("bannerFile", bannerFile);
 
         setBannerLoading(true);
-        setBannerMessage(null);
         try {
-            await axios.delete(API_URL, getAuthConfig());
-            setBannerMessage({ type: 'success', text: 'Banner deleted successfully!' });
-            setCurrentBanner(null);
-        } catch (error) {
-            console.error('Banner deletion failed:', error);
-            const errorMsg = axios.isAxiosError(error)
-                ? error.response?.data?.msg || 'Delete failed.'
-                : 'Server error.';
-            setBannerMessage({ type: 'error', text: errorMsg });
+            await axios.post(API_URL, data, getAuthConfig());
+            setBannerMessage({ type: 'success', text: `Banner uploaded for ${selectedPage}` });
+            setBannerFile(null);
+            fetchBanner();
+        } catch (err) {
+            const msg = axios.isAxiosError(err) ? err.response?.data?.msg : "Upload failed";
+            setBannerMessage({ type: 'error', text: msg || "Upload error" });
         } finally {
             setBannerLoading(false);
         }
     };
 
+    const handleBannerDelete = async () => {
+        if (!window.confirm(`Delete banner for ${selectedPage}?`)) return;
+        setBannerLoading(true);
+        try {
+            await axios.delete(`${API_URL}?page=${selectedPage}`, getAuthConfig());
+            setCurrentBanner(null);
+            setBannerMessage({ type: 'success', text: 'Banner deleted' });
+        } catch {
+            setBannerMessage({ type: 'error', text: 'Delete failed' });
+        } finally {
+            setBannerLoading(false);
+        }
+    };
+
+    // ================= UI =================
     return (
-        <div className="flex-1 p-8">
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-8 border-b pb-4">
-                Banner Management
-            </h1>
+        <div className="flex-1 p-8 bg-gray-100">
+            <h1 className="text-4xl font-bold mb-6">Banner Manager</h1>
 
-            <div className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-xl mb-12">
+            <div className="max-w-4xl mx-auto bg-white p-8 shadow rounded">
 
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Homepage Banner</h2>
-
+                {/* STATUS */}
                 {bannerMessage && (
-                    <div className={`p-4 mb-4 rounded-lg text-sm 
-          ${bannerMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <div className={`p-3 mb-4 rounded ${bannerMessage.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                         {bannerMessage.text}
                     </div>
                 )}
 
-                {/* ✅ DISPLAY CURRENT BANNER */}
+                {/* PAGE SELECT */}
+                <div className="mb-6">
+                    <label className="font-semibold block mb-2">Select Page</label>
+                    <select
+                        value={selectedPage}
+                        onChange={(e) => setSelectedPage(e.target.value)}
+                        className="w-full border p-3 rounded"
+                    >
+                        {allPages.map(page => (
+                            <option key={page} value={page}>
+                                {page}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* CURRENT BANNER */}
                 {currentBanner ? (
-                    <div className="mb-6 border p-4 rounded-lg bg-indigo-50">
-                        <h3 className="text-xl font-semibold text-indigo-700 mb-3">Current Banner</h3>
+                    <div className="border p-4 rounded mb-6 bg-indigo-50">
+                        <h3 className="font-semibold mb-3">Current Banner</h3>
 
-                        {currentBanner.mediaType === "video" ? (
-                            <video
-                                src={currentBanner.mediaUrl}
-                                controls
-                                autoPlay
-                                muted
-                                loop
-                                className="max-w-full rounded-md shadow-md mb-4"
-                                style={{ maxHeight: '300px', objectFit: 'cover' }}
-                            />
+                        {currentBanner.mediaType === "image" ? (
+                            <img src={currentBanner.mediaUrl} className="rounded shadow max-h-72 w-full object-cover" />
                         ) : (
-                            <img
-                                src={currentBanner.mediaUrl}
-                                alt="Current Banner"
-                                className="max-w-full h-auto rounded-md shadow-md mb-4"
-                                style={{ maxHeight: '300px', objectFit: 'cover' }}
-                            />
+                            <video src={currentBanner.mediaUrl} controls className="rounded shadow max-h-72 w-full object-cover" />
                         )}
-
-                        <p className="text-sm text-gray-600 mb-3">
-                            Uploaded: {new Date(currentBanner.uploadedAt).toLocaleString()}
-                        </p>
 
                         <button
                             onClick={handleBannerDelete}
-                            disabled={bannerLoading}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                            className="mt-4 bg-red-600 text-white px-4 py-2 rounded"
                         >
-                            {bannerLoading ? 'Deleting…' : 'Delete Banner'}
+                            Delete Banner
                         </button>
                     </div>
                 ) : (
-                    <p className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800">
-                        No banner uploaded.
+                    <p className="mb-6 bg-yellow-100 p-3 rounded">
+                        No banner for this page.
                     </p>
                 )}
 
-                {/* ✅ UPLOAD FORM */}
+                {/* UPLOAD */}
                 <form onSubmit={handleBannerUpload} className="space-y-4 border-t pt-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Upload Image OR Video
-                        </label>
-                        <input
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={handleBannerFileChange}
-                            required={!currentBanner}
-                            className="mt-1 block w-full text-sm file:rounded-full file:bg-indigo-50"
-                        />
-                        {bannerFile && (
-                            <p className="text-xs text-gray-500 mt-1">
-                                Selected: {bannerFile.name}
-                            </p>
-                        )}
-                    </div>
+                    <input
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={handleBannerFileChange}
+                        className="border w-full p-2"
+                    />
 
                     <button
-                        type="submit"
                         disabled={bannerLoading || !bannerFile}
-                        className="w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                        className="w-full bg-indigo-600 text-white py-3 rounded disabled:opacity-40"
                     >
-                        {bannerLoading ? 'Uploading…' : currentBanner ? 'Update Banner' : 'Upload Banner'}
+                        {bannerLoading ? "Uploading..." : "Upload Banner"}
                     </button>
                 </form>
 

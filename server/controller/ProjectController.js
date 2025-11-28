@@ -1,4 +1,14 @@
 import { ProjectCollection } from "../models/Project.js";
+import { cloudinary } from "../middleware/uploadCloud.js";
+import { ObjectId } from "mongodb";
+const getPublicId = (url) => {
+  const parts = url.split("/");
+  const file = parts[parts.length - 1]; // abc123.jpg
+  const folder = parts[parts.length - 2]; // projects folder
+  const name = file.split(".")[0];
+
+  return `${folder}/${name}`;
+};
 
 
 // --- GET ALL PROJECTS ---
@@ -16,110 +26,99 @@ export const getProjects = async (req, res) => {
 };
 
 // --- CREATE PROJECT ---
+// --- CREATE PROJECT ---
 export const createProject = async (req, res) => {
-  try {
-    const { title, description, location, showOnHome } = req.body;
+  try {
+    const { title, description, location, showOnHome } = req.body;
 
-    if (!req.files?.before || !req.files?.cad || !req.files?.after) {
-      return res
-        .status(400)
-        .json({ msg: "Missing one or more required images" });
-    }
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ msg: "At least one image is required." });
+    }
 
-    const newProject = {
-      title,
-      description,
-      location,
-      showOnHome: showOnHome === "true",
-      images: {
-        // ⭐ CHANGE: Use the Cloudinary URL (req.files[0].path) and remove path manipulation
-        before: req.files.before[0].path, 
-        cad: req.files.cad[0].path, 
-        after: req.files.after[0].path, 
-      },
-      dateCreated: new Date(),
-    };
+    const imageUrls = req.files.map(file => file.path); // Cloudinary URLs
 
-    const result = await ProjectCollection.insertOne(newProject);
-    newProject._id = result.insertedId;
+    const newProject = {
+      title,
+      description,
+      location,
+      showOnHome: showOnHome === "true",
+      images: imageUrls,   // ✅ ARRAY INSTEAD OF OBJECT
+      dateCreated: new Date(),
+    };
 
-    res.status(201).json(newProject);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
-  }
+    const result = await ProjectCollection.insertOne(newProject);
+    newProject._id = result.insertedId;
+
+    res.status(201).json(newProject);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
 };
 
 // --- UPDATE PROJECT ---
+// --- UPDATE PROJECT ---
 export const updateProject = async (req, res) => {
-  try {
-    const projectId = req.params.id;
-    const files = req.files;
-
-    const updates = {
-      ...req.body,
-      showOnHome: req.body.showOnHome === "true",
-    };
-
-    const project = await ProjectCollection.findOne({ _id: projectId });
-    if (!project) return res.status(404).json({ msg: "Project not found." });
-
-    const updatedImages = { ...project.images };
-    const imagesToDelete = []; // Array to hold Cloudinary public IDs for deletion
-
-    for (const key of ["before", "cad", "after"]) {
-      if (files?.[key]?.[0]) {
-        // ⭐ CHANGE 1: Capture the old image URL for deletion
-        const oldUrl = project.images[key];
-        if (oldUrl) imagesToDelete.push(oldUrl); 
-
-        // ⭐ CHANGE 2: Save the new Cloudinary URL
-        updatedImages[key] = files[key][0].path;
-      }
-    }
-
-    // NOTE: Cloudinary deletion logic is complex (needs public_id extraction and API call). 
-    // For simplicity, we skip remote deletion here, but in a production app, you must
-    // implement `cloudinary.uploader.destroy(public_id)` before updating the image.
-
-    await ProjectCollection.updateOne(
-      { _id: projectId },
-      { $set: { ...updates, images: updatedImages } }
-    );
-
-    res.json({ msg: "Project updated successfully." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Update failed", error: err.message });
-  }
-};
-
-// --- DELETE PROJECT ---
-export const deleteProject = async (req, res) => {
-    
-
     try {
         const projectId = req.params.id;
 
         const project = await ProjectCollection.findOne({ _id: projectId });
         if (!project) return res.status(404).json({ msg: "Project not found." });
 
-        /* // ⚠️ REMOVED LOCAL FILE DELETION LOGIC (MUST BE REPLACED BY CLOUDINARY DELETION)
-        for (const key of ["before", "cad", "after"]) {
-            const filePath = project.images[key];
-            if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        const updates = {
+            ...req.body,
+            showOnHome: req.body.showOnHome === "true",
+        };
+
+        // ✅ If new images uploaded, replace old ones
+        if (req.files && req.files.length > 0) {
+            // 👇 ADD THIS CHECK: Ensure project.images is an array before iterating
+            if (Array.isArray(project.images)) {
+                for (const img of project.images) {
+                    const id = getPublicId(img);
+                    await cloudinary.uploader.destroy(id);
+                }
+            }
+
+            updates.images = req.files.map((file) => file.path);
         }
-        */
 
-        await ProjectCollection.deleteOne({ _id: projectId });
+        await ProjectCollection.updateOne({ _id: projectId }, { $set: updates });
 
-        res.json({ msg: "Project deleted." });
+        res.json({ msg: "Project updated successfully." });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: "Delete failed" });
+        res.status(500).json({ msg: "Update failed", error: err.message });
     }
 };
 
+// --- DELETE PROJECT ---
+// --- DELETE PROJECT ---
+// --- DELETE PROJECT ---
+export const deleteProject = async (req, res) => {
+    try {
+        const projectId = req.params.id;
+
+        const project = await ProjectCollection.findOne({ _id: projectId });
+        if (!project) return res.status(404).json({ msg: "Project not found." });
+
+        // ✅ DELETE IMAGES FROM CLOUDINARY
+        // 👇 ADD THIS CHECK: Ensure project.images is an array before iterating
+        if (Array.isArray(project.images)) {
+            for (const imageUrl of project.images) {
+                const publicId = getPublicId(imageUrl);
+                await cloudinary.uploader.destroy(publicId);
+            }
+        }
+
+        await ProjectCollection.deleteOne({ _id: projectId });
+
+        res.json({ msg: "Project & images deleted successfully." });
+    } catch (err) {
+        console.error("Cloudinary Delete Error:", err);
+        res.status(500).json({ msg: "Delete failed", error: err.message });
+    }
+};
 // --- GET HOME PROJECTS ONLY ---
 export const getHomeProjects = async (req, res) => {
   try {
@@ -134,3 +133,37 @@ export const getHomeProjects = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+export const getProjectById = async (req, res) => {
+  try {
+    const id = req.params.id.trim();
+    console.log("Fetching project by UUID:", id);
+
+    const project = await ProjectCollection.findOne({ _id: id });
+
+    if (!project) {
+      console.log("❌ Not found:", id);
+      return res.status(404).json({ msg: "Project not found" });
+    }
+
+    console.log("✅ Found:", project.title);
+    res.json(project);
+  } catch (err) {
+    console.error("GET PROJECT BY ID ERROR:", err);
+    res.status(500).json({ msg: "Server Error", error: err.message });
+  }
+};
+
+
+export const getProjectBySlug = async (req, res) => {
+  const slug = req.params.slug.replace(/-/g, " ");
+
+  const project = await ProjectCollection.findOne({
+    title: { $regex: new RegExp(`^${slug}$`, "i") },
+  });
+
+  if (!project) return res.status(404).json({ msg: "Project not found" });
+
+  res.json(project);
+};
+

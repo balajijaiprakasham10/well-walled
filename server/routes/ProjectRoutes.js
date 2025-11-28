@@ -1,11 +1,13 @@
 import express from "express";
-import { uploadBannerMedia } from "../middleware/uploadCloud.js";
+import { uploadProjects } from "../middleware/uploadCloud.js";
 import {
   getProjects,
   createProject,
   updateProject,
   deleteProject,
   getHomeProjects, // ✅ ADD THIS
+  getProjectById,
+  getProjectBySlug,
 } from "../controller/ProjectController.js";
 
 import { verifyAdmin } from "../middleware/authMiddleware.js";
@@ -17,25 +19,22 @@ router.get("/home", getHomeProjects);
 
 router.post(
   "/",
-  uploadBannerMedia.fields([
-    { name: "before", maxCount: 1 },
-    { name: "cad", maxCount: 1 },
-    { name: "after", maxCount: 1 },
-  ]),
+  uploadProjects.array("images", 10), // ✅ allow up to 10 images
   verifyAdmin,
   createProject
 );
 
 router.put(
   "/:id",
-  uploadBannerMedia.fields([
-    { name: "before", maxCount: 1 },
-    { name: "cad", maxCount: 1 },
-    { name: "after", maxCount: 1 },
-  ]),
+  uploadProjects.array("images", 10), // ✅ allow update images
   verifyAdmin,
   updateProject
 );
+
+router.get("/slug/:slug", getProjectBySlug);
+router.get("/:id", getProjectById);
+
+
 
 router.delete("/:id", verifyAdmin, deleteProject);
 

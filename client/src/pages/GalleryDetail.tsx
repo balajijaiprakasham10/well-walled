@@ -3,73 +3,64 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 
-interface Item {
+interface Project {
     _id: string;
     title: string;
-    category: string;
     description: string;
     images: string[];
     location?: string;
-    year?: string;
 }
 
-const API_BASE = (import.meta as any).env.VITE_API;
-const API_URL = `${API_BASE}/api/items/`;
+const API_BASE = import.meta.env.VITE_API;
 
-// --- 1. CHILD COMPONENT: Handles the UI & Animation ---
-// We separate this so 'useScroll' only runs AFTER the data exists.
-const ItemView = ({ item }: { item: Item }) => {
+// 1. EXTRACT THE UI & ANIMATION LOGIC INTO A SEPARATE COMPONENT
+// This component is only rendered when 'project' exists, ensuring the ref is always valid.
+const ProjectView = ({ project }: { project: Project }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const remainingImages = item.images.slice(1);
+    const remainingImages = project.images.slice(1);
 
-    // Scroll Animation Hooks
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end start"],
     });
 
-    // Scale text from 1 to 50 (zoom through effect)
     const scale = useTransform(scrollYProgress, [0, 1], [1, 50]);
-    // Fade out the white mask at the end so the image is fully visible
     const opacity = useTransform(scrollYProgress, [0.8, 1], [1, 0]);
 
     return (
         <div className="bg-white min-h-screen font-sans">
-
-            {/* === HERO: KNOCKOUT SCROLL REVEAL === */}
+            {/* HERO */}
             <header ref={containerRef} className="relative h-[200vh]">
                 <div className="sticky top-0 h-screen overflow-hidden">
-
-                    {/* Background Layer: The Image */}
                     <div className="absolute inset-0">
                         <img
-                            src={item.images[0]}
-                            alt={item.title}
+                            src={project.images[0]}
+                            alt={project.title}
                             className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/20" />
                     </div>
 
-                    {/* Foreground Layer: The White Mask with Text Hole */}
                     <motion.div
                         style={{ opacity }}
                         className="absolute inset-0 bg-white mix-blend-screen flex items-center justify-center z-10"
                     >
                         <motion.div
                             style={{ scale }}
-                            className="text-center origin-center w-full"
+                            className="text-center origin-center"
                         >
-                            <h1 className="text-7xl md:text-9xl font-black text-black uppercase tracking-tighter leading-none px-4 break-words">
-                                {item.title}
+                            <h1 className="text-7xl md:text-9xl font-black text-black uppercase tracking-tighter leading-none px-4">
+                                {project.title}
                             </h1>
-                            <p className="text-black text-xs md:text-sm tracking-[0.5em] mt-4 font-bold uppercase">
-                                {item.category} {item.year ? `— ${item.year}` : ""}
-                            </p>
+                            {project.location && (
+                                <p className="text-black text-xs md:text-sm tracking-[0.5em] mt-4 font-bold uppercase">
+                                    {project.location}
+                                </p>
+                            )}
                         </motion.div>
                     </motion.div>
 
-                    {/* Scroll Indicator */}
                     <motion.div
                         style={{ opacity: useTransform(scrollYProgress, [0, 0.2], [1, 0]) }}
                         className="absolute bottom-10 left-0 right-0 text-center z-20 pointer-events-none mix-blend-difference text-white"
@@ -79,39 +70,26 @@ const ItemView = ({ item }: { item: Item }) => {
                 </div>
             </header>
 
-            {/* === DETAILS SECTION === */}
+            {/* DETAILS */}
             <main className="relative z-10 bg-white">
                 <div className="max-w-6xl mx-auto px-6 py-24">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-
-                        {/* Details Column */}
                         <div className="md:col-span-4 space-y-8 border-t border-gray-200 pt-6">
                             <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900 mb-6">Details</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</p>
-                                    <p className="text-sm text-gray-900 mt-1 uppercase">{item.category}</p>
-                                </div>
-                                {item.location && (
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Location</p>
-                                        <p className="text-sm text-gray-900 mt-1 uppercase">{item.location}</p>
-                                    </div>
-                                )}
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Location</p>
+                                <p className="text-sm text-gray-900 mt-1 uppercase">{project.location || "—"}</p>
                             </div>
                         </div>
 
-                        {/* Description Column */}
                         <div className="md:col-span-8 border-t border-gray-200 pt-6">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900 mb-6">Brief</h3>
-                            <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-light">
-                                {item.description}
-                            </p>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900 mb-6">Description</h3>
+                            <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-light">{project.description}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* === IMAGE GALLERY === */}
+                {/* IMAGES */}
                 {remainingImages.length > 0 && (
                     <section className="max-w-[1400px] mx-auto px-6 pb-24">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -126,9 +104,9 @@ const ItemView = ({ item }: { item: Item }) => {
                                 >
                                     <img
                                         src={img}
-                                        alt={`${item.title} detail ${index + 1}`}
+                                        alt={`${project.title} ${index + 1}`}
                                         onClick={() => setSelectedImage(img)}
-                                        className="w-full h-auto object-cover grayscale-0 hover:grayscale-[10%] transition-all duration-700 hover:scale-[1.02] cursor-zoom-in"
+                                        className="w-full h-auto object-cover transition-all duration-700 hover:scale-[1.02] cursor-zoom-in"
                                     />
                                 </motion.div>
                             ))}
@@ -137,7 +115,7 @@ const ItemView = ({ item }: { item: Item }) => {
                 )}
             </main>
 
-            {/* === LIGHTBOX MODAL === */}
+            {/* LIGHTBOX */}
             <AnimatePresence>
                 {selectedImage && (
                     <motion.div
@@ -147,19 +125,14 @@ const ItemView = ({ item }: { item: Item }) => {
                         onClick={() => setSelectedImage(null)}
                         className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 cursor-zoom-out"
                     >
-                        <button
-                            className="absolute top-5 right-5 text-white text-4xl font-light hover:text-gray-300 z-[70]"
-                            onClick={() => setSelectedImage(null)}
-                        >
-                            &times;
-                        </button>
+                        <button className="absolute top-5 right-5 text-white text-4xl font-light hover:text-gray-300 z-[70]" onClick={() => setSelectedImage(null)}>×</button>
                         <motion.img
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             src={selectedImage}
-                            alt="Full Screen View"
+                            alt="Preview"
                             className="max-w-full max-h-[90vh] object-contain shadow-2xl rounded-sm"
                             onClick={(e) => e.stopPropagation()}
                         />
@@ -170,31 +143,39 @@ const ItemView = ({ item }: { item: Item }) => {
     );
 };
 
-// --- 2. PARENT COMPONENT: Handles Data Fetching ---
-const ProjectDetailPage = () => {
+// 2. MAIN PARENT COMPONENT - Handles only Data Fetching
+const GalleryDetail = () => {
     const { id } = useParams();
-    const [item, setItem] = useState<Item | null>(null);
+    const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchItem = async () => {
+        const fetchProject = async () => {
             try {
-                const res = await axios.get(`${API_URL}${id}`);
-                setItem(res.data);
+                const res = await axios.get(`${API_BASE}/api/projects/${id}`);
+                setProject(res.data);
             } catch (err) {
                 console.error("❌ Failed:", err);
             } finally {
                 setLoading(false);
             }
         };
-        if (id) fetchItem();
+        if (id) fetchProject();
     }, [id]);
 
-    if (loading) return <div className="h-screen flex items-center justify-center text-gray-500 uppercase">Loading...</div>;
-    if (!item) return <div className="h-screen flex items-center justify-center">Project not found</div>;
+    if (loading)
+        return (
+            <div className="h-screen flex items-center justify-center text-gray-500 uppercase">
+                Loading...
+            </div>
+        );
 
-    // We render the View component only when data is ready
-    return <ItemView item={item} />;
+    if (!project)
+        return <div className="h-screen flex items-center justify-center">Project not found</div>;
+
+    // 3. Render the ProjectView ONLY when we have data. 
+    // This ensures useScroll finds its target immediately on mount.
+    return <ProjectView project={project} />;
 };
 
-export default ProjectDetailPage;
+export default GalleryDetail;

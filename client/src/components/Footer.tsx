@@ -15,9 +15,9 @@ const Footer = () => {
                         {/* Logo Container */}
                         <Link to="/" className="flex items-center -ml-20 -mt-20">
                             <img
-                                src="/logo.png"
+                                src="/logo2.png"
                                 alt="WellWalled Habitat"
-                                className="h-[200px] w-auto object-contain brightness-0 invert"
+                                className="h-[240px] w-auto object-contain brightness-0 invert"
                             />
                         </Link>
 

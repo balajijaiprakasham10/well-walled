@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadBannerMedia } from "../middleware/uploadCloud.js";
+import { uploadProjects } from "../middleware/uploadCloud.js";
 import {
   getItems,
   addItem,
@@ -23,7 +23,7 @@ router.get("/category/:category", getItemsByCategory);
 router.get("/:id", getItemById);
 
 // ADD ITEM
-router.post("/", verifyAdmin, uploadBannerMedia.array("images", 10), addItem);
+router.post("/", verifyAdmin, uploadProjects.array("images", 10), addItem);
 
 // DELETE ITEM
 router.delete("/:id", verifyAdmin, deleteItem);

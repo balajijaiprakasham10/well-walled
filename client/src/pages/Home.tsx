@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const API_BASE = (import.meta as any).env.VITE_API;
 const PROJECTS_URL = `${API_BASE}/api/projects/home`;
-const BANNER_URL = `${API_BASE}/api/banner`;
+const BANNER_URL = `${API_BASE}/api/banner?page=home`;
 
 interface BannerData {
     _id: string;
@@ -72,30 +72,55 @@ const HomePage: React.FC = () => {
         fetchHomeData();
     }, []);
 
-    const BannerSection = () => {
+    // 1. BACKGROUND ONLY (Fixed / Parallax)
+    const BannerBackground = () => {
         if (!banner) return null;
         return (
-            <section className="relative h-screen w-full overflow-hidden">
+            <div className="fixed top-0 left-0 h-screen w-full overflow-hidden -z-10">
                 {banner.mediaUrl.includes("/video/") || banner.mediaType === "video" ? (
                     <video className="absolute inset-0 w-full h-full object-cover scale-105" src={banner.mediaUrl} autoPlay muted loop playsInline />
                 ) : (
                     <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url("${banner.mediaUrl}")` }} />
                 )}
+                {/* Overlay attached to background */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/10"></div>
-                <div className="relative z-10 flex h-full items-center">
-                    <div className="max-w-7xl mx-auto px-6">
-                        <div className="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 p-8 md:p-12 max-w-xl">
-                            <p className="text-sm tracking-widest uppercase text-red-400 mb-3">Interior Design Studio</p>
-                            <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6">Design that <br /> feels like Home</h1>
-                            <p className="text-gray-200 mb-8">Crafted interiors that bring beauty, comfort, and identity into every space.</p>
-                            <div className="flex gap-4">
-                                <button onClick={() => navigate('/gallery')} className="bg-white text-black px-6 py-3 rounded-full">View Projects</button>
-                                <button onClick={() => navigate('/contact')} className="border border-white text-white px-6 py-3 rounded-full">Contact Us</button>
-                            </div>
+            </div>
+        );
+    };
+
+    // 2. CONTENT ONLY (Scrollable)
+    // This sits in the flow of the document and scrolls UP, leaving the background behind.
+    const BannerContent = () => {
+        return (
+            <div className="h-screen w-full flex items-center justify-center relative z-0">
+                <div className="max-w-7xl mx-auto px-6 w-full flex justify-center">
+                    <div className="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 p-8 md:p-12 max-w-xl text-center">
+                        <p className="text-sm tracking-widest uppercase text-red-400 mb-3">
+                            Interior Design Studio
+                        </p>
+                        <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6">
+                            Design that <br /> feels like Home
+                        </h1>
+                        <p className="text-gray-200 mb-8">
+                            Crafted interiors that bring beauty, comfort, and identity into every space.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => navigate('/gallery')}
+                                className="bg-white text-black px-6 py-3 rounded-full"
+                            >
+                                View Projects
+                            </button>
+                            <button
+                                onClick={() => navigate('/contact')}
+                                className="border border-white text-white px-6 py-3 rounded-full"
+                            >
+                                Contact Us
+                            </button>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         );
     };
 
@@ -117,68 +142,51 @@ const HomePage: React.FC = () => {
         </section>
     );
 
-    // 🌟 UPDATED: STICKY CARD STACKING EFFECT 🌟
-    // This creates the "Slide Up / Curtain" effect seen in your reference video.
     const FeaturedProjects = () => {
-        const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, _path: string) => {
-            e.currentTarget.src = `https://placehold.co/700x700/D1D5DB/4B5563?text=Image+Load+Error`;
+        const resolveImage = (project: any) => {
+            if (project.images?.after && project.images.after.startsWith("http")) return project.images.after;
+            if (Array.isArray(project.images) && project.images.length > 0) return project.images[0];
+            if (project.image && project.image.startsWith("http")) return project.image;
+            if (project.after && project.after.startsWith("http")) return project.after;
+            return "https://placehold.co/800x800?text=No+Image";
         };
 
         return (
             <div className="bg-white">
-                {/* Title Section (Scrolls away normally) */}
                 <div className="max-w-7xl mx-auto px-4 pt-20 pb-10">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center md:text-left">
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
                         Featured Projects
                     </h2>
                 </div>
 
-                {/* Projects Container */}
                 <div className="relative">
                     {projects.length === 0 ? (
                         <p className="text-gray-600 text-center py-20">No featured projects yet.</p>
                     ) : (
-                        projects.map((project, index) => (
-                            // ✅ THE MAGIC: sticky + top-0 + h-screen
-                            // This makes each row stick to the top, and the next one slides up OVER it.
-                            <div
-                                key={project._id}
-                                className="sticky top-0 h-screen flex flex-col md:flex-row bg-white overflow-hidden"
-                                style={{ zIndex: index + 1 }} // Ensures stacking order is correct
-                            >
-                                {/* --- LEFT: TEXT CONTENT --- */}
-                                <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-16 border-r border-gray-50 bg-white">
-                                    <div className="max-w-md">
-                                        <p className="text-xs font-bold tracking-[0.2em] text-red-600 uppercase mb-4">
-                                            Residential
-                                        </p>
-                                        <h3 className="text-4xl md:text-6xl font-light text-gray-900 leading-tight mb-6">
-                                            {project.title}
-                                        </h3>
-                                        <p className="text-lg text-gray-500 leading-relaxed mb-8">
-                                            {project.description}
-                                        </p>
-                                        <button
-                                            onClick={() => navigate('/gallery')}
-                                            className="group inline-flex items-center text-sm font-bold tracking-widest uppercase border-b-2 border-gray-900 pb-2 hover:text-red-600 hover:border-red-600 transition-colors"
-                                        >
-                                            View Project
-                                            <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                                        </button>
+                        projects.map((project, index) => {
+                            const img = resolveImage(project);
+                            return (
+                                <div
+                                    key={project._id}
+                                    className="sticky top-0 h-screen flex flex-col md:flex-row bg-white"
+                                    style={{ zIndex: index + 1 }}
+                                >
+                                    <div className="w-full md:w-1/2 flex items-center justify-center p-10 md:p-16 border-r border-gray-100 bg-white">
+                                        <div className="max-w-md">
+                                            <p className="text-xs tracking-widest text-red-600 uppercase mb-4">Residential</p>
+                                            <h3 className="text-4xl md:text-6xl font-light mb-6">{project.title}</h3>
+                                            <p className="text-lg text-gray-500 mb-8">{project.description}</p>
+                                            <button onClick={() => navigate('/gallery')} className="group text-sm font-bold tracking-widest border-b-2 border-black pb-1">
+                                                View Project →
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="w-full md:w-1/2 h-full">
+                                        <img src={img} alt={project.title} className="w-full h-full object-cover" />
                                     </div>
                                 </div>
-
-                                {/* --- RIGHT: IMAGE --- */}
-                                <div className="w-full md:w-1/2 h-full">
-                                    <img
-                                        src={project.images.after}
-                                        alt={project.title}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => handleImageError(e, project.images.after)}
-                                    />
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             </div>
@@ -188,10 +196,20 @@ const HomePage: React.FC = () => {
     if (loading) return <div className="text-center p-10 text-xl">Loading homepage...</div>;
 
     return (
-        <div className="home-page">
-            <BannerSection />
-            <WhatWeDoSection />
-            <FeaturedProjects />
+        <div className="home-page relative">
+
+            {/* 1. FIXED BACKGROUND (Parallax) - Stays still */}
+            <BannerBackground />
+
+            {/* 2. SCROLLABLE CONTENT - Moves Up */}
+            {/* The Banner Text Card sits here now, so it scrolls away */}
+            <BannerContent />
+
+            {/* 3. WHITE CONTENT LAYER - Slides over the fixed background */}
+            <div className="relative z-10 bg-white shadow-2xl">
+                <WhatWeDoSection />
+                <FeaturedProjects />
+            </div>
         </div>
     );
 };

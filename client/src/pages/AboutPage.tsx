@@ -1,24 +1,18 @@
 import React from "react";
 import { motion } from "framer-motion";
+import HeroBanner from "../components/HeroBanner"; // ✅ Import
 
 const AboutPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800">
-            {/* Hero Section */}
-            <section className="relative h-[60vh] bg-fixed bg-center bg-cover"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507089947368-19c1da9775ae?q=80&w=2070')" }}
-            >
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-white text-5xl md:text-6xl font-extrabold tracking-wider text-center px-4"
-                    >
-                        ABOUT US
-                    </motion.h1>
-                </div>
-            </section>
+
+            {/* ✅ DYNAMIC BANNER (Replaces hardcoded Image) */}
+            <HeroBanner
+                page="about"
+                title="ABOUT US"
+                className="h-screen"
+
+            />
 
             {/* Content */}
             <div className="max-w-6xl mx-auto px-6 py-16 space-y-20">

@@ -4,7 +4,8 @@ import {
   getBanner,
   deleteBanner,
 } from "../controller/BannerController.js";
-import { uploadBannerMedia } from "../middleware/uploadCloud.js"; // 👈 from step 1
+import { uploadBanners } from "../middleware/uploadCloud.js";
+
 import { verifyAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -13,12 +14,8 @@ router.get("/", getBanner);
 
 // Field name here must match your form / frontend
 // e.g. formData.append("bannerFile", file)
-router.post(
-  "/",
-  verifyAdmin,
-  uploadBannerMedia.single("bannerFile"), // <--- change field name as you like
-  uploadBanner
-);
+router.post("/", verifyAdmin, uploadBanners.single("bannerFile"), uploadBanner);
+
 
 router.delete("/", verifyAdmin, deleteBanner);
 

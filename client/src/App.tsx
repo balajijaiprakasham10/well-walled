@@ -8,6 +8,7 @@ import {
 
 import HomePage from "./pages/Home";
 import GalleryPage from "./pages/GalleryPage";
+import GalleryDetail from "./pages/GalleryDetail";
 import AdminPage from "./pages/Admin/AdminPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -39,6 +40,7 @@ const AppContent = () => {
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/gallery/:id" element={<GalleryDetail />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/products/:categoryId" element={<CategoryProductPage />} />
         <Route path="/products/:category/:id" element={<ProjectDetailPage />} />

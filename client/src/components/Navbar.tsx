@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
@@ -7,13 +7,6 @@ const API_BASE = (import.meta as any).env.VITE_API;
 const API_URL = `${API_BASE}/api/categories`;
 
 const Navbar: React.FC = () => {
-  const location = useLocation();
-
-  const isTransparentPage =
-    location.pathname === "/" ||
-    (location.pathname.startsWith("/products") && location.pathname.split("/").length >= 4) ||
-    location.pathname.startsWith("/project/");
-
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [scrolled, setScrolled] = useState(false);
@@ -24,6 +17,7 @@ const Navbar: React.FC = () => {
     { name: "About Us", path: "/about" },
   ];
 
+  // ✅ Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -36,16 +30,13 @@ const Navbar: React.FC = () => {
     fetchCategories();
   }, []);
 
+  // ✅ Transparency scroll logic (NO route conditions anymore)
   useEffect(() => {
-    if (!isTransparentPage) {
-      setScrolled(true);
-      return;
-    }
     const onScroll = () => setScrolled(window.scrollY > 80);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isTransparentPage, location.pathname]);
+  }, []);
 
   const dropdownVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -55,42 +46,33 @@ const Navbar: React.FC = () => {
 
   return (
     <nav
-      className={`${isTransparentPage ? "fixed" : "sticky"
-        } top-0 left-0 w-full z-50 transition-all duration-300 ${isTransparentPage
-          ? scrolled
-            ? "bg-[#5d8d8d] shadow-md"
-            : "bg-transparent"
-        : "bg-[#5d8d8d] shadow-md"
-        }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300
+        ${scrolled ? "bg-[#5d8d8d] shadow-md" : "bg-transparent"}
+      `}
     >
-
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
 
-        {/* 👇 1. ALIGNMENT FIX: Used 'items-center' and removed top padding */}
         <div className="flex justify-between items-center h-[90px]">
 
-          <Link to="/" className="flex items-center -ml-20">
+          {/* LOGO */}
+          <Link to="/" className="flex items-center -ml-20 mt-4">
             <img
-              src="/logo.png"
+              src="/logo2.png"
               alt="WellWalled Habitat"
-              /* 👇 2. SIZE FIX: Increased height to 70px (nav is 95px, so this fills it well) */
-              /* Removed translate-y to keep it perfectly centered */
-              className={`h-[200px] w-auto object-contain transition-all duration-300  ${isTransparentPage && !scrolled ? "brightness-0 invert" : ""
-                }`}
+              className={`h-[250px] w-auto object-contain transition-all duration-300 
+                ${!scrolled ? "brightness-0 invert" : ""}
+              `}
             />
           </Link>
 
-          {/* NAV ITEMS */}
+          {/* NAV LINKS */}
           <div className="hidden md:flex space-x-8 items-center">
-            {navItems.map((item) => (
+
+            {navItems.map(item => (
               <Link
                 key={item.name}
                 to={item.path}
-                /* 👇 3. TEXT ALIGNMENT: Removed pb-1 to ensure text is truly centered vertically */
-                className={`font-medium text-lg border-b-2 transition ${location.pathname === item.path
-                  ? "border-white"
-                  : "border-transparent hover:border-white"
-                  } ${isTransparentPage && !scrolled ? "text-white" : "text-white"}`}
+                className="font-medium text-lg text-white border-b-2 border-transparent hover:border-white transition"
               >
                 {item.name}
               </Link>
@@ -102,10 +84,7 @@ const Navbar: React.FC = () => {
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
             >
-              <button
-                className={`font-medium text-lg border-b-2 transition border-transparent hover:border-gray-400 ${isTransparentPage && !scrolled ? "text-white" : "text-white"
-                  }`}
-              >
+              <button className="font-medium text-lg text-white border-b-2 border-transparent hover:border-white transition">
                 Products ▾
               </button>
 
@@ -116,36 +95,30 @@ const Navbar: React.FC = () => {
                     animate="visible"
                     exit="exit"
                     variants={dropdownVariants}
-                    // Adjusted top position slightly to align with center
-                    className={`absolute top-[50px] left-0 w-48 rounded-lg shadow-xl transition ${isTransparentPage
-                      ? scrolled
-                        ? "bg-white"
-                        : "bg-black/80 backdrop-blur-md"
-                      : "bg-white"
-                      }`}
+                    className={`absolute top-[50px] left-0 w-48 rounded-lg shadow-xl
+                      transition overflow-hidden
+                      ${scrolled ? "bg-white" : "bg-black/80 backdrop-blur-md"}
+                    `}
                   >
-                    {categories.length === 0 ? (
-                      <p className="px-4 py-2 text-sm text-gray-400">
-                        No categories
-                      </p>
-                    ) : (
-                      categories.map((cat) => (
-                        <Link
-                          key={cat._id}
-                          to={`/products/${cat.name}`}
-                          className={`block px-4 py-2 text-sm transition ${isTransparentPage && !scrolled
-                            ? "text-white hover:bg-white/10"
-                            : "text-gray-700 hover:bg-gray-100"
-                            }`}
-                        >
-                          {cat.name}
-                        </Link>
-                      ))
-                    )}
+                    {categories.map(cat => (
+                      <Link
+                        key={cat._id}
+                        to={`/products/${cat.name}`}
+                        className={`block px-4 py-2 text-sm transition
+                          ${scrolled
+                            ? "text-gray-800 hover:bg-gray-100"
+                            : "text-white hover:bg-white/10"
+                          }
+                        `}
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+
           </div>
         </div>
       </div>
