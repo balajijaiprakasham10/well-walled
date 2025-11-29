@@ -33,6 +33,9 @@ const ItemView = ({ item }: { item: Item }) => {
     const scale = useTransform(scrollYProgress, [0, 1], [1, 50]);
     // Fade out the white mask at the end so the image is fully visible
     const opacity = useTransform(scrollYProgress, [0.8, 1], [1, 0]);
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <div className="bg-white min-h-screen font-sans">

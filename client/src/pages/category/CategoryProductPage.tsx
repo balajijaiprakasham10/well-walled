@@ -46,7 +46,12 @@ const CategoryProductPage = () => {
     const [items, setItems] = useState<Item[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [banner, setBanner] = useState<BannerData | null>(null);
+    
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // ===================== FETCH ITEMS =====================
     const fetchItems = async () => {

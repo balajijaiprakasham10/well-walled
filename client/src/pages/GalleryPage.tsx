@@ -21,6 +21,9 @@
 
         // State for Hover Effect
         const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
+        useEffect(() => {
+            window.scrollTo(0, 0);
+        }, []);
 
         // Fetch Projects
         useEffect(() => {

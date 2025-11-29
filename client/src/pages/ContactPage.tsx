@@ -2,6 +2,8 @@ import React from 'react';
 import { Mail, Phone, Home } from 'lucide-react'; // Assuming you have lucide-react for icons
 
 const ContactUsPage: React.FC = () => {
+
+
     return (
         <div className="relative min-h-screen bg-gray-900 text-white overflow-hidden">
             {/* Background Image/Overlay - replace with your actual image */}
