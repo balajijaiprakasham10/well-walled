@@ -13,6 +13,7 @@ import AdminPage from "./pages/Admin/AdminPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage"
 import CategoryProductPage from "./pages/category/CategoryProductPage";
 import ProjectDetailPage from "./pages/category/CategoryProductDetail";
 import CategoriesPage from "./pages/Admin/CategoriesPage";
@@ -42,6 +43,7 @@ const AppContent = () => {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/gallery/:id" element={<GalleryDetail />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/products/:categoryId" element={<CategoryProductPage />} />
         <Route path="/products/:category/:id" element={<ProjectDetailPage />} />
 

@@ -72,7 +72,7 @@ const Footer = () => {
 
                             {/* Social Links */}
                             <div className="flex gap-6 pt-4">
-                                <a href="#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Instagram</a>
+                                <a href="https://www.instagram.com/wellwalledhabitat/?igsh=MXE1ZjE3OXZzbHBmOQ%3D%3D#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Instagram</a>
                                 <a href="#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Pinterest</a>
                                 <a href="#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">LinkedIn</a>
                             </div>
