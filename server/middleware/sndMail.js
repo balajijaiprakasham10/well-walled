@@ -1,28 +1,8 @@
 // server/middleware/sndMail.js
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-// create transporter (adjust to your env vars)
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false, // usually false for 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ SMTP CONNECTION FAILED");
-    console.error(error);
-  } else {
-    console.log("✅ SMTP SERVER IS READY TO SEND EMAILS");
-  }
-});
-/**
- * Send contact email to admin
- */
 export const sendContactEmail = async ({
   fullName,
   email,
@@ -31,20 +11,26 @@ export const sendContactEmail = async ({
   message,
 }) => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const fromEmail = process.env.FROM_EMAIL;
 
     if (!adminEmail) {
       throw new Error(
         "ADMIN_EMAIL is not configured in environment variables."
       );
     }
+    if (!fromEmail) {
+      throw new Error("FROM_EMAIL is not configured in environment variables.");
+    }
 
-    console.log(`Attempting to send contact email to admin: ${adminEmail}`);
+    console.log(
+      `Attempting to send contact email via Resend to admin: ${adminEmail}`
+    );
 
-    await transporter.sendMail({
-      from: `"Contact Form - ${fullName}" <${process.env.SMTP_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: fromEmail, // ✅ now: "Well Walled <onboarding@resend.dev>"
       to: adminEmail,
-      replyTo: email, // admin can reply directly to user
+      reply_to: email,
       subject: `New Contact: ${subject || "No subject"}`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -62,9 +48,17 @@ export const sendContactEmail = async ({
       `,
     });
 
-    console.log(`Contact email successfully sent to admin ${adminEmail}`);
+    if (error) {
+      console.error("Error from Resend API:", error);
+      throw new Error(error.message || "Failed to send email via Resend");
+    }
+
+    console.log(
+      "✅ Contact email successfully sent via Resend:",
+      data?.id || data
+    );
   } catch (error) {
-    console.error("Error sending contact email:", error);
+    console.error("Error sending contact email via Resend:", error);
     throw error;
   }
 };
