@@ -27,9 +27,13 @@ export const submitContactForm = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in submitContactForm:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while submitting the contact form.",
+      message:
+        error.message ||
+        "Something went wrong while submitting the contact form.",
     });
   }
+
 };
