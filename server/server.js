@@ -12,6 +12,7 @@ import bannerRoutes from "./routes/Banneroutes.js";
 import projectRoutes from "./routes/ProjectRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use("/api/banner", bannerRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/contact", contactRoutes);
 
 // ---------------------
 // Serverless Export for Vercel
