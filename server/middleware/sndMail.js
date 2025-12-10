@@ -12,6 +12,14 @@ export const transporter = nodemailer.createTransport({
   },
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP CONNECTION FAILED");
+    console.error(error);
+  } else {
+    console.log("✅ SMTP SERVER IS READY TO SEND EMAILS");
+  }
+});
 /**
  * Send contact email to admin
  */
