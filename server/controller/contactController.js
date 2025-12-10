@@ -1,6 +1,5 @@
-
+// server/controller/contactController.js
 import { sendContactEmail } from "../middleware/sndMail.js";
-
 
 export const submitContactForm = async (req, res) => {
   try {
@@ -35,5 +34,4 @@ export const submitContactForm = async (req, res) => {
         "Something went wrong while submitting the contact form.",
     });
   }
-
 };
