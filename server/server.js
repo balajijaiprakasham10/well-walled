@@ -28,8 +28,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://well-walled.vercel.app",
-      "https://well-walled-habitat.com",
-      "https://www.well-walled-habitat.com",
+      "https://wellwalledhabitat.com",
+      "https://www.wellwalledhabitat.com",
     ],
     credentials: true,
   })
