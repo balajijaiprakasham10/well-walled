@@ -25,7 +25,12 @@ const app = express();
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://well-walled.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://well-walled.vercel.app",
+      "https://well-walled-habitat.com",
+      "https://www.well-walled-habitat.com",
+    ],
     credentials: true,
   })
 );

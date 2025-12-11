@@ -100,7 +100,7 @@ const ContactUsPage: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-2xl font-semibold mb-1">Phone</h3>
-                                <p className="text-gray-300 text-lg">561-456-2321</p>
+                                <p className="text-gray-300 text-lg">9489173631</p>
                             </div>
                         </div>
 
@@ -112,7 +112,7 @@ const ContactUsPage: React.FC = () => {
                             <div>
                                 <h3 className="text-2xl font-semibold mb-1">Email</h3>
                                 <p className="text-gray-300 text-lg">
-                                    example@example.com
+                                    wellwalledhabitat@gmail.com
                                 </p>
                             </div>
                         </div>
