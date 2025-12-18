@@ -11,22 +11,26 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
 
                     {/* Column 1: Brand / Logo */}
-                    <div>
-                        {/* Logo Container - UNCHANGED */}
-                        <Link to="/" className="flex items-center -ml-20 -mt-20">
-                            <img
-                                src="/logo2.png"
-                                alt="WellWalled Habitat"
-                                className="h-[240px] w-auto object-contain brightness-0 invert"
-                            />
+                    <div className="flex flex-col gap-6">
+                        <Link
+                            to="/"
+                            className="
+      font-century
+      text-base md:text-2xl lg:text-3xl
+      font-semibold
+      uppercase text-white
+      tracking-widest lg:tracking-[0.2em]
+    "
+                        >
+                            WELLWALLED HABITAT
                         </Link>
 
-                        {/* UPDATED: Increased to text-lg */}
-                        <p className="text-white/80 text-lg leading-relaxed max-w-xs font-light -mt-6 pl-1">
+                        <p className="text-white/80 text-lg leading-relaxed max-w-xs font-light">
                             Crafting timeless spaces that honor the past while embracing the present.
                             Architectural design and interior renovation.
                         </p>
                     </div>
+
 
                     {/* Column 2: Navigation */}
                     <div>

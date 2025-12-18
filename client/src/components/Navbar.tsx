@@ -65,17 +65,7 @@ const Navbar: React.FC = () => {
     <nav className={`fixed top-0 left-0 w-full z-30 transition-all ${scrolled ? "bg-[#5d8d8d] shadow-lg" : "bg-transparent"}`}>
       <div className="relative w-full">
 
-        {/* IMAGE LOGO — DESKTOP ONLY */}
-        <Link
-          to="/"
-          className="hidden lg:block absolute -right-14 top-1/2 -translate-y-1/2 z-40"
-        >
-          <img
-            src="/logo2.png"
-            alt="WellWalled Habitat"
-            className={`h-[180px] transition ${!scrolled ? "brightness-0 invert" : ""}`}
-          />
-        </Link>
+
 
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex justify-between items-center h-[90px]">
@@ -84,21 +74,21 @@ const Navbar: React.FC = () => {
             <Link
               to="/"
               className="
-                text-base md:text-2xl lg:text-3xl 
-                font-light 
-                uppercase text-white 
+              
+                text-base md:text-2xl lg:text-3xl
+                font-semibold
+                uppercase text-white
                 transition-colors duration-300 hover:text-gray-300
-                
-                /* Responsive Spacing & Margin */
-                tracking-widest lg:tracking-[0.3em]
+                tracking-widest lg:tracking-[0.2em]
                 ml-0 lg:-ml-20
               "
             >
-              WELL WALLED HABITAT
+              WELLWALLED HABITAT
             </Link>
 
+
             {/* DESKTOP MENU (Hidden on Tablet & Mobile) */}
-            <div className="hidden lg:flex space-x-14 px-5 items-center">
+            <div className="hidden lg:flex space-x-14  items-center">
               {navItems.map(item => (
                 <Link key={item.name} to={item.path} className="text-white text-xl hover:border-b-2">
                   {item.name}
