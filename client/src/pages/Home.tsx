@@ -2,17 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Home, CookingPot, Bed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import HeroBanner from '../components/HeroBanner';
 
 const API_BASE = (import.meta as any).env.VITE_API;
 const PROJECTS_URL = `${API_BASE}/api/projects/home`;
-const BANNER_URL = `${API_BASE}/api/banner?page=home`;
-
-interface BannerData {
-    _id: string;
-    mediaUrl: string;
-    mediaType: "image" | "video";
-    uploadedAt: string;
-}
 
 interface Project {
     _id: string;
@@ -23,6 +16,9 @@ interface Project {
         after: string;
     };
     showOnHome: boolean;
+    // Fallback fields if your API returns flat structure
+    image?: string;
+    after?: string;
 }
 
 const services = [
@@ -44,83 +40,27 @@ const services = [
 ];
 
 const HomePage: React.FC = () => {
-    const [banner, setBanner] = useState<BannerData | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    // Fetch Data
+    // Fetch Projects Data (Banner is now handled by HeroBanner component)
     useEffect(() => {
-        const fetchHomeData = async () => {
+        const fetchProjects = async () => {
             try {
-                const [bannerRes, projectRes] = await Promise.all([
-                    axios.get<BannerData>(BANNER_URL),
-                    axios.get<Project[]>(PROJECTS_URL),
-                ]);
-
-                setBanner(bannerRes.data);
-                setProjects(projectRes.data);
+                const res = await axios.get<Project[]>(PROJECTS_URL);
+                setProjects(res.data);
             } catch (err) {
                 console.error('Homepage API error:', err);
-                setError("Failed to load homepage content.");
+                setError("Failed to load projects.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchHomeData();
+        fetchProjects();
     }, []);
-
-    // 1. BACKGROUND ONLY (Fixed / Parallax)
-    const BannerBackground = () => {
-        if (!banner) return null;
-        return (
-            <div className="fixed top-0 left-0 h-screen w-full overflow-hidden -z-10">
-                {banner.mediaUrl.includes("/video/") || banner.mediaType === "video" ? (
-                    <video className="absolute inset-0 w-full h-full object-cover scale-105" src={banner.mediaUrl} autoPlay muted loop playsInline />
-                ) : (
-                    <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url("${banner.mediaUrl}")` }} />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/10"></div>
-            </div>
-        );
-    };
-
-    // 2. CONTENT ONLY (Scrollable)
-    const BannerContent = () => {
-        return (
-            <div className="h-screen w-full flex items-center justify-center relative z-0">
-                <div className="max-w-7xl mx-auto px-6 w-full flex justify-center">
-                    <div className="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 p-8 md:p-12 max-w-xl text-center">
-                        <p className="text-sm tracking-widest uppercase text-red-400 mb-3">
-                            Interior Design Studio
-                        </p>
-                        <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6">
-                            Design that <br /> feels like Home
-                        </h1>
-                        <p className="text-gray-200 mb-8">
-                            Crafted interiors that bring beauty, comfort, and identity into every space.
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                            <button
-                                onClick={() => navigate('/gallery')}
-                                className="bg-white text-black px-6 py-3 rounded-full hover:bg-gray-100 transition"
-                            >
-                                View Projects
-                            </button>
-                            <button
-                                onClick={() => navigate('/contact')}
-                                className="border border-white text-white px-6 py-3 rounded-full hover:bg-white/10 transition"
-                            >
-                                Contact Us
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     const WhatWeDoSection = () => (
         <section className="py-20 bg-white">
@@ -140,10 +80,9 @@ const HomePage: React.FC = () => {
         </section>
     );
 
-    // ✅ UPDATED FEATURED PROJECTS SECTION
-    // ✅ UPDATED FEATURED PROJECTS SECTION (Stacked Cards on ALL devices)
+    // Stacked Cards Project Section
     const FeaturedProjects = () => {
-        const resolveImage = (project: any) => {
+        const resolveImage = (project: Project) => {
             if (project.images?.after && project.images.after.startsWith("http")) return project.images.after;
             if (Array.isArray(project.images) && project.images.length > 0) return project.images[0];
             if (project.image && project.image.startsWith("http")) return project.image;
@@ -152,7 +91,7 @@ const HomePage: React.FC = () => {
         };
 
         return (
-            <div className="bg-gray-50"> {/* Darker background to make white cards pop */}
+            <div className="bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 pt-10 pb-4 lg:pt-20 lg:pb-10">
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                         Featured Projects
@@ -170,25 +109,17 @@ const HomePage: React.FC = () => {
                                 <div
                                     key={project._id}
                                     className={`
-                                      sticky top-0 
-                                      h-screen 
-                                      flex flex-col lg:flex-row 
-                                      bg-white 
-                                      overflow-hidden
-                                      /* Stacked Card Styling */
+                                        sticky top-0 
+                                        h-screen 
+                                        flex flex-col lg:flex-row 
+                                        bg-white 
+                                        overflow-hidden
                                         lg:rounded-none 
-                                      shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none
-                                      border-t border-gray-100 lg:border-none
+                                        shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none
+                                        border-t border-gray-100 lg:border-none
                                     `}
-                                    style={{
-                                        zIndex: index + 1
-                                    }}
+                                    style={{ zIndex: index + 1 }}
                                 >
-                                    {/* MOBILE LAYOUT: 
-                                      1. Image takes top 50-60% 
-                                      2. Text takes bottom 40-50%
-                                    */}
-
                                     {/* IMAGE SECTION */}
                                     <div className="w-full h-[55%] lg:h-full lg:w-1/2 order-1 lg:order-2 relative">
                                         <img
@@ -196,7 +127,6 @@ const HomePage: React.FC = () => {
                                             alt={project.title}
                                             className="w-full h-full object-cover"
                                         />
-                                        {/* Gradient overlay for mobile text readability if needed, or just style */}
                                         <div className="lg:hidden absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20"></div>
                                     </div>
 
@@ -209,7 +139,6 @@ const HomePage: React.FC = () => {
                                                 {project.title}
                                             </h3>
 
-                                            {/* Line clamp to prevent text overflowing on small screens */}
                                             <p className="text-sm md:text-lg text-gray-500 mb-6 lg:mb-8 line-clamp-3 md:line-clamp-none">
                                                 {project.description}
                                             </p>
@@ -227,7 +156,6 @@ const HomePage: React.FC = () => {
                         })
                     )}
                 </div>
-                {/* Spacer to allow the last card to be scrolled past if needed, or just end of section */}
                 <div className="h-20 bg-white"></div>
             </div>
         );
@@ -237,8 +165,39 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="home-page relative">
-            <BannerBackground />
-            <BannerContent />
+
+            {/* ✅ NEW: HeroBanner Component handles fetching, mobile view, and parallax */}
+            <HeroBanner page="home" className="h-screen">
+                <div className="max-w-7xl mx-auto px-6 w-full flex justify-center">
+                    <div className="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 p-8 md:p-12 max-w-xl text-center">
+                        <p className="text-sm tracking-widest uppercase text-red-400 mb-3 font-bold">
+                            Interior Design Studio
+                        </p>
+                        <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6 drop-shadow-md">
+                            Design that <br /> feels like Home
+                        </h1>
+                        <p className="text-gray-100 mb-8 text-lg">
+                            Crafted interiors that bring beauty, comfort, and identity into every space.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => navigate('/gallery')}
+                                className="bg-white text-black px-6 py-3 rounded-full hover:bg-gray-200 transition font-medium"
+                            >
+                                View Projects
+                            </button>
+                            <button
+                                onClick={() => navigate('/contact')}
+                                className="border border-white text-white px-6 py-3 rounded-full hover:bg-white/10 transition font-medium"
+                            >
+                                Contact Us
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </HeroBanner>
+
+            {/* Main Content */}
             <div className="relative z-10 bg-white shadow-2xl">
                 <WhatWeDoSection />
                 <FeaturedProjects />

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-// NOTE: We need a custom CSS class for the 3D Parallax parent
-// You will need to add these styles to your main CSS file (e.g., index.css or global.css):
+// NOTE: Ensure your global CSS has this class for video parallax:
 /*
 .parallax-scene-video {
     perspective: 1px;
@@ -23,9 +22,10 @@ interface HeroBannerProps {
 interface BannerData {
     mediaUrl: string;
     mediaType: "image" | "video";
+    mobileMediaUrl?: string;
+    mobileMediaType?: "image" | "video";
 }
 
-// ✅ FALLBACK KEYS
 const DEFAULT_FALLBACK = {
     products: "products/default",
     site: "site/default"
@@ -37,44 +37,42 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
     subtitle,
     children,
     className = "h-screen"
-
 }) => {
     const [banner, setBanner] = useState<BannerData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
-    // ... (fetchBanner useEffect remains the same)
+    // 1. Detect Screen Size
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    // 2. Fetch Banner Data
     useEffect(() => {
         const fetchBanner = async () => {
             setLoading(true);
-
             const tryFetch = async (key: string) => {
                 const res = await axios.get(`${API_BASE}/api/banner?page=${key}`);
                 return res.data;
             };
 
             try {
-                // 1. Try exact match
-                const normalizePage = (p: string) =>
-                    p.replace(/^\/+/, "").toLowerCase();
-
+                const normalizePage = (p: string) => p.replace(/^\/+/, "").toLowerCase();
                 const bannerData = await tryFetch(normalizePage(page));
-
                 setBanner(bannerData);
             } catch {
                 try {
-                    // 2. Try fallback category banner
                     if (page.startsWith("products/")) {
                         const fallback = await tryFetch(DEFAULT_FALLBACK.products);
                         setBanner(fallback);
                         return;
                     }
-
-                    // 3. Site-wide fallback
                     const siteFallback = await tryFetch(DEFAULT_FALLBACK.site);
                     setBanner(siteFallback);
-
                 } catch {
-                    // 4. Final fail → show nothing
                     setBanner(null);
                 }
             } finally {
@@ -91,56 +89,59 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
 
     if (!banner) return null;
 
-    // Determine if it's an image banner for the simple background parallax
-    const isImage = banner.mediaType === "image";
+    // 3. Determine Active Media
+    const hasMobileMedia = !!banner.mobileMediaUrl;
+    const showMobile = isMobile && hasMobileMedia;
 
-    // Determine container classes and styles based on media type
-    const containerClasses = isImage
-        ? `${className} bg-cover bg-center bg-no-repeat` // Image Parallax
-        : `${className} parallax-scene-video`;           // Video Parallax (requires custom CSS)
-
-    const containerStyle = isImage
-        ? { backgroundImage: `url('${banner.mediaUrl}')`, backgroundAttachment: 'fixed' } // Image Parallax Style
-        : {};
+    const activeUrl = showMobile ? banner.mobileMediaUrl : banner.mediaUrl;
+    const activeType = showMobile ? banner.mobileMediaType : banner.mediaType;
 
     return (
-        <div
-            className={`relative w-full overflow-hidden ${containerClasses}`}
-            style={containerStyle}
-        >
+        <div className={`relative w-full overflow-hidden ${className}`}>
 
-            {/* MEDIA - Render only if it's a video (since image is handled by background-image/style) */}
-            {banner.mediaType === "video" && (
-                <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    src={banner.mediaUrl}
-                    // ✅ 3D Transform Hack for Parallax
-                    style={{
-                        transform: 'translateZ(-1px) scale(2)' // Pushes video back and scales it up
-                    }}
-                    className="absolute inset-0 w-full h-full object-cover origin-top"
-                />
-            )}
+            {/* ✅ FIXED PARALLAX LAYER 
+               This div stays fixed to the viewport window (z-0) 
+               while the content (z-10) scrolls over it.
+            */}
+            <div className="fixed top-0 left-0 w-full h-full -z-10">
+                {activeType === "video" ? (
+                    <video
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        src={activeUrl}
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: 'center' }}
+                    />
+                ) : (
+                    <img
+                        src={activeUrl}
+                        alt="Banner"
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: 'center' }}
+                    />
+                )}
+                {/* Dark Overlay inside the fixed layer so it covers the image correctly */}
+                <div className="absolute inset-0 bg-black/40" />
+            </div>
 
-            {/* OVERLAY */}
-            <div className="absolute inset-0 bg-black/40" />
-
-            {/* CONTENT */}
+            {/* ✅ CONTENT LAYER
+               Relative positioning allows this to scroll normally 
+               over the fixed background behind it.
+            */}
             <div className="relative z-10 h-full flex items-center justify-center">
                 {children ? (
                     children
                 ) : (
                     <div className="text-center text-white px-4">
                         {title && (
-                            <h1 className="text-5xl md:text-6xl font-serif mb-4">
+                            <h1 className="text-5xl md:text-6xl font-serif mb-4 drop-shadow-lg">
                                 {title}
                             </h1>
                         )}
                         {subtitle && (
-                            <p className="max-w-2xl mx-auto text-lg text-white/90">
+                            <p className="max-w-2xl mx-auto text-lg text-white/90 drop-shadow-md">
                                 {subtitle}
                             </p>
                         )}
@@ -151,4 +152,4 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
     );
 };
 
-export default HeroBanner;  
+export default HeroBanner;

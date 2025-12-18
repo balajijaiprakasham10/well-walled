@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 const Footer = () => {
-    const currentYear = new Date().getFullYear();
+    
 
     return (
         <footer className="bg-[#5d8d8d] text-white pt-20 pb-10 border-t border-white/20">
@@ -12,7 +12,7 @@ const Footer = () => {
 
                     {/* Column 1: Brand / Logo */}
                     <div>
-                        {/* Logo Container */}
+                        {/* Logo Container - UNCHANGED */}
                         <Link to="/" className="flex items-center -ml-20 -mt-20">
                             <img
                                 src="/logo2.png"
@@ -21,11 +21,8 @@ const Footer = () => {
                             />
                         </Link>
 
-                        {/* 👇 SPACING UPDATE: 
-                           Changed from -mt-16 to -mt-6.
-                           This pushes the text DOWN, creating a gap between the logo and the text.
-                        */}
-                        <p className="text-white/80 text-sm leading-relaxed max-w-xs font-light -mt-6 pl-1">
+                        {/* UPDATED: Increased to text-lg */}
+                        <p className="text-white/80 text-lg leading-relaxed max-w-xs font-light -mt-6 pl-1">
                             Crafting timeless spaces that honor the past while embracing the present.
                             Architectural design and interior renovation.
                         </p>
@@ -33,10 +30,12 @@ const Footer = () => {
 
                     {/* Column 2: Navigation */}
                     <div>
-                        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/90 mb-6">
+                        {/* UPDATED: Increased to text-lg */}
+                        <h3 className="text-lg font-bold uppercase tracking-[0.2em] text-white/90 mb-6">
                             Explore
                         </h3>
-                        <ul className="space-y-4 text-sm font-light tracking-wide">
+                        {/* UPDATED: Increased to text-lg */}
+                        <ul className="space-y-4 text-lg font-light tracking-wide">
                             <li>
                                 <Link to="/" className="text-white/80 hover:text-white transition-colors">
                                     Home
@@ -62,19 +61,21 @@ const Footer = () => {
 
                     {/* Column 3: Contact & Social */}
                     <div>
-                        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/90 mb-6">
+                        {/* UPDATED: Increased to text-lg */}
+                        <h3 className="text-lg font-bold uppercase tracking-[0.2em] text-white/90 mb-6">
                             Contact
                         </h3>
-                        <div className="space-y-4 text-sm font-light tracking-wide text-white/80">
+                        {/* UPDATED: Increased to text-lg */}
+                        <div className="space-y-4 text-lg font-light tracking-wide text-white/80">
                             <p>123 Design Avenue, New York, NY</p>
                             <p>hello@wellwalled.com</p>
                             <p>+1 (555) 000-0000</p>
 
                             {/* Social Links */}
+                            {/* UPDATED: Increased to text-base (medium) */}
                             <div className="flex gap-6 pt-4">
-                                <a href="https://www.instagram.com/wellwalledhabitat/?igsh=MXE1ZjE3OXZzbHBmOQ%3D%3D#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Instagram</a>
-                                <a href="#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Pinterest</a>
-                                <a href="#" className="uppercase text-xs tracking-widest text-white/80 hover:text-white hover:underline transition-colors">LinkedIn</a>
+                                <a href="https://www.instagram.com/wellwalledhabitat/?igsh=MXE1ZjE3OXZzbHBmOQ%3D%3D#" className="uppercase text-base tracking-widest text-white/80 hover:text-white hover:underline transition-colors">Instagram</a>
+                                
                             </div>
                         </div>
                     </div>
@@ -84,11 +85,9 @@ const Footer = () => {
                 <div className="w-full h-px bg-white/20 mb-8"></div>
 
                 {/* Bottom Section: Copyright */}
-                <div className="flex flex-col md:flex-row justify-between items-center text-xs text-white/70 uppercase tracking-widest">
-                    <p>&copy; {currentYear} Wellwalled Habitat. All rights reserved.</p>
-                    <div className="mt-4 md:mt-0 flex gap-8">
-                        <span className="cursor-pointer hover:text-white transition-colors">Privacy Policy</span>
-                    </div>
+                {/* UPDATED: Increased to text-base (medium) */}
+                <div className="flex flex-col md:flex-row justify-between items-center text-base text-white/70 uppercase tracking-widest">
+
                 </div>
             </div>
         </footer>
